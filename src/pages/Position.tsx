@@ -64,7 +64,13 @@ export default class PositionScreen extends Component {
                 >
                 </MapView>
                 <Text style={{ marginTop: StatusBar.currentHeight }} >{this.state.text} </Text>
-                <Button title="link" onPress={() => { this.props.navigation.navigate('Data') }} ></Button>
+
+                <Button title="link" onPress={() => {
+                    {
+                        // @ts-ignore
+                        this.props.navigation.navigate('Data')
+                    }
+                }}></Button>
             </>
         );
     }
