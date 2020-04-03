@@ -42,7 +42,7 @@ export default class PositionScreen extends Component<Props, States> {
     this.state = {
       data: [],
       locationText: "",
-      timeInterval: 3,
+      timeInterval: 20,
     };
     this.Loading = null;
     this.MapRemove = null;
@@ -105,9 +105,11 @@ export default class PositionScreen extends Component<Props, States> {
     contextData.gyroscopeData = g;
     contextData.magnetometerData = m;
     console.log(contextData)
+    let data = this.state.data;
+    data.push(contextData);
     this.Loading.stopLoading();
     this.setState({
-      locationText: JSON.stringify(location)
+      data
     });
 
     // this.setState({
@@ -176,9 +178,9 @@ export default class PositionScreen extends Component<Props, States> {
               this.Loading = ref;
             }}
           />
-          <ScrollView style={{ flex: 1, marginTop: StatusBar.currentHeight }}>
+          <ScrollView style={{ flex: 1}}>
             {this.state.data.map(dataValue => {
-              <View style={{ backgroundColor: "#444444" }}>
+              <View style={{ backgroundColor: "#444444",height:20,borderBottomWidth:0.9 }}>
                 <Text>{JSON.stringify(dataValue)}</Text>
               </View>;
             })}
