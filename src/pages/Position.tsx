@@ -1,10 +1,17 @@
 import React, { Component } from "react";
-import { StatusBar,Text,View ,SafeAreaView} from "react-native";
-import * as Location from "expo-location";
+import {
+  StatusBar,
+  Text,
+  View,
+  SafeAreaView,
+  Alert,
+  StyleSheet,
+  ScrollView,
+  Platform,
+} from "react-native";
+import Slider from "@react-native-community/slider";
 import * as Permissions from "expo-permissions";
 import Loading from "../components/loading";
-import { LocationData } from "expo-location";
-import { Slider } from "react-native-elements";
 
 import {
   Accelerometer,
@@ -12,10 +19,19 @@ import {
   Gyroscope,
   Magnetometer,
   BarometerMeasurement,
-  ThreeAxisMeasurement
+  ThreeAxisMeasurement,
 } from "expo-sensors";
-import { ScrollView } from "react-native-gesture-handler";
+import Feather from "react-native-vector-icons/Feather";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import FontAwesome from "react-native-vector-icons/FontAwesome";
+import AntDesign from "react-native-vector-icons/AntDesign";
 import { getTimeString } from "../utils";
+import {
+  LocationData,
+  startListen,
+  LocationListener,
+  stopListen,
+} from "../modules/geo";
 
 interface Props {
   navigation: any;
@@ -24,181 +40,467 @@ interface Props {
 interface ContextData {
   timeString: string;
   location: LocationData;
-  accelerometerData: ThreeAxisMeasurement;
-  barometerData: BarometerMeasurement;
-  gyroscopeData: ThreeAxisMeasurement;
-  magnetometerData: ThreeAxisMeasurement;
+  accelerometerData: ThreeAxisMeasurement | null;
+  barometerData: BarometerMeasurement | null;
+  gyroscopeData: ThreeAxisMeasurement | null;
+  magnetometerData: ThreeAxisMeasurement | null;
 }
 interface States {
-  locationText: string; //当前坐标文本
   timeInterval: number;
   data: ContextData[];
 }
 
 export default class PositionScreen extends Component<Props, States> {
-  static num = 1;
+  created: boolean;
+  ScrollView: ScrollView;
+
   constructor(props: Readonly<Props>) {
     super(props);
     this.state = {
       data: [],
-      locationText: "",
-      timeInterval: 20,
+      timeInterval: 5,
     };
     this.Loading = null;
-    this.MapRemove = null;
-    this.startLocation = this.startLocation.bind(this);
-    this.locationCallback = this.locationCallback.bind(this);
+    this.a = null;
+    this.b = null;
+    this.g = null;
+    this.m = null;
+    this.created = false; //是否首次获取位置
+    this.locationListener = new LocationListener("app1", async (e) => {
+      if (!this.created) {
+        this.Loading.stopLoading();
+        try {
+          let a_is = await Accelerometer.isAvailableAsync();
+          if (a_is) {
+            Accelerometer.addListener((accelerometerData) => {
+              this.a = accelerometerData;
+            });
+          }
+          let b_is = await Barometer.isAvailableAsync();
+          if (b_is) {
+            Barometer.addListener((barometerData) => {
+              this.b = barometerData;
+            });
+          }
+          let g_is = Gyroscope.isAvailableAsync();
+          if (g_is) {
+            Gyroscope.addListener((gyroscopeData) => {
+              this.g = gyroscopeData;
+            });
+          }
+          let m_is = Magnetometer.isAvailableAsync();
+          if (m_is) {
+            Magnetometer.addListener((magnetometerData) => {
+              this.m = magnetometerData;
+            });
+          }
+          this.created = true;
+        } catch (e) {
+          console.log(e);
+          Alert.alert("错误", "" + e);
+          this.Loading.stopLoading();
+        }
+        this.created = true;
+      }
+      // console.log(this.a,this.b,this.g,this.m)
+      let dItem: ContextData = {
+        timeString: getTimeString(e.time),
+        location: e,
+        accelerometerData: this.a,
+        barometerData: this.b,
+        gyroscopeData: this.g,
+        magnetometerData: this.m,
+      };
+      let data = this.state.data;
+      data.push(dItem);
+      this.setState({ data }, () => {
+        this.ScrollView.scrollToEnd();
+      });
+    });
+    this._setSensorInterval = this._setSensorInterval.bind(this);
     this.start = this.start.bind(this);
   }
-
+  a: ThreeAxisMeasurement;
+  b: BarometerMeasurement;
+  g: ThreeAxisMeasurement;
+  m: ThreeAxisMeasurement;
   Loading: Loading;
-  MapRemove: () => void;
-  async startLocation(
-    options: Location.LocationOptions,
-    callback: (data: LocationData) => any
-  ): Promise<{
-    remove(): void;
-  }> {
-    try {
-      let { status } = await Permissions.askAsync(Permissions.LOCATION);
-      if (status !== "granted") {
-        console.log("Permission to access location was denied");
-        return Promise.reject("permisson reject");
+  locationListener: LocationListener;
+
+  _setSensorInterval(timeInterval: number) {
+    Accelerometer.setUpdateInterval(timeInterval * 1000);
+    Barometer.setUpdateInterval(timeInterval * 1000);
+    Gyroscope.setUpdateInterval(timeInterval * 1000);
+    Magnetometer.setUpdateInterval(timeInterval * 1000);
+  }
+  async start() {
+    this.Loading.startLoading("正在寻找位置");
+    this._setSensorInterval(this.state.timeInterval);
+    if (Platform.Version > 22) {
+      const { status } = await Permissions.askAsync(Permissions.LOCATION);
+      if (status === "granted") {
+        startListen(
+          "gps",
+          this.state.timeInterval * 1000,
+          0,
+          this.locationListener
+        ).catch((e) => {
+          console.log(e);
+          Alert.alert("错误", "" + e);
+          this.Loading.stopLoading();
+        });
       } else {
-        return Location.watchPositionAsync(options, callback);
+        Alert.alert("提示", "权限被拒绝");
+        this.Loading.stopLoading();
       }
-    } catch (e) {
-      console.log(e);
-      return Promise.reject("Error");
+    } else {
+      startListen(
+        "gps",
+        this.state.timeInterval * 1000,
+        0,
+        this.locationListener
+      ).catch((e) => {
+        console.log(e);
+        Alert.alert("错误", "" + e);
+        this.Loading.stopLoading();
+      });
     }
   }
-
-  locationCallback(
-    location: LocationData,
-    a: ThreeAxisMeasurement,
-    b: BarometerMeasurement,
-    g: ThreeAxisMeasurement,
-    m: ThreeAxisMeasurement
-  ) {
-    let contextData: ContextData = {
-      location: {
-        coords: {
-          speed: -1,
-          longitude: -1,
-          latitude: -1,
-          accuracy: -1,
-          heading: -1,
-          altitude: -1,
-        },
-        timestamp:0,
-      },
-      accelerometerData:null,
-      barometerData:null,
-      gyroscopeData:null,
-      magnetometerData:null,
-      timeString:""
-    };
-    contextData.location = location;
-    contextData.timeString = getTimeString(location.timestamp);
-    contextData.accelerometerData = a;
-    contextData.barometerData = b;
-    contextData.gyroscopeData = g;
-    contextData.magnetometerData = m;
-    console.log(contextData)
-    let data = this.state.data;
-    data.push(contextData);
-    this.Loading.stopLoading();
-    this.setState({
-      data
-    });
-
-    // this.setState({
-    //     region: {
-    //         longitude: location.coords.longitude,
-    //         latitude: location.coords.latitude,
-    //         longitudeDelta: 0.04,
-    //         latitudeDelta: 0.05
-    //     }
-    // })
+  stop(): Promise<any> {
+    Accelerometer.removeAllListeners();
+    Barometer.removeAllListeners();
+    Gyroscope.removeAllListeners();
+    Magnetometer.removeAllListeners();
+    this.a = null;
+    this.b = null;
+    this.g = null;
+    this.m = null;
+    return stopListen(this.locationListener);
   }
-  locationReslove(remove: () => void) {
-    this.MapRemove = remove;
-  }
-  start() {
-    this.Loading.startLoading("正在寻找位置");
-    Accelerometer.setUpdateInterval(this.state.timeInterval * 1000);
-    Barometer.setUpdateInterval(this.state.timeInterval * 1000);
-    Gyroscope.setUpdateInterval(this.state.timeInterval * 1000);
-    Magnetometer.setUpdateInterval(this.state.timeInterval * 1000);
-    let a: ThreeAxisMeasurement,
-      b: BarometerMeasurement,
-      g: ThreeAxisMeasurement,
-      m: ThreeAxisMeasurement;
-    Accelerometer.addListener(accelerometerData => {
-      a = accelerometerData;
-    });
-    Barometer.addListener(barometerData => {
-      b = barometerData;
-    });
-    Gyroscope.addListener(gyroscopeData => {
-      g = gyroscopeData;
-    });
-    Magnetometer.addListener(magnetometerData => {
-      m = magnetometerData;
-    });
-    this.startLocation(
-      {
-        accuracy: Location.Accuracy.Highest,
-        timeInterval: this.state.timeInterval * 1000,
-        distanceInterval: 0,
-        mayShowUserSettingsDialog: false
-      },
-      location => {
-        this.locationCallback(location, a, b, g, m);
-      }
-    ).then(({ remove }) => {
-      this.locationReslove(remove);
-    });
-  }
-  stop() {}
   componentDidMount() {
     this.start();
+    // this.setState({
+    //   data:[      {
+    //       timeString: "18:04:52",
+    //       location: {
+    //         time: 1585994692000,
+    //         altitude: 75.37725830078125,
+    //         accuracy: 67.53600311279297,
+    //         longitude: 114.05010223388672,
+    //         latitude: 22.664462327957153,
+    //         provider: "gps",
+    //       },
+    //       accelerometerData: {
+    //         z: 0.6884080767631531,
+    //         y: -0.5791540741920471,
+    //         x: -0.4808875322341919,
+    //       },
+    //       barometerData: { pressure: 1006.2092895507812 },
+    //       gyroscopeData: {
+    //         z: -0.29776039719581604,
+    //         y: -1.6265186071395874,
+    //         x: 1.3208510875701904,
+    //       },
+    //       magnetometerData: {
+    //         z: -37.411964416503906,
+    //         y: -13.246841430664062,
+    //         x: 8.965384483337402,
+    //       },
+    //     },]
+    // })
   }
   render() {
     return (
-      <>
+      <View style={{ paddingTop: StatusBar.currentHeight, flex: 1 }}>
         <StatusBar
           translucent={true}
           backgroundColor="#00000000"
           barStyle="dark-content"
         />
-        <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-          <Loading
-            ref={ref => {
-              this.Loading = ref;
-            }}
-          />
-          <ScrollView style={{ flex: 1}}>
-            {this.state.data.map(dataValue => {
-              <View style={{ backgroundColor: "#444444",height:20,borderBottomWidth:0.9 }}>
-                <Text>{JSON.stringify(dataValue)}</Text>
-              </View>;
+        <Loading
+          ref={(ref) => {
+            this.Loading = ref;
+          }}
+        />
+        <SafeAreaView style={{ flex: 1 }}>
+          <ScrollView
+            style={{ flex: 1 }}
+            ref={(ref) => (this.ScrollView = ref)}
+          >
+            {this.state.data.map((dataValue, index) => {
+              return (
+                <View
+                  key={index}
+                  style={{
+                    paddingHorizontal: 20,
+                    paddingTop: 5,
+                  }}
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      opacity: 0.8,
+                    }}
+                  >
+                    <Feather name="clock" size={10} color="#000" />
+                    <Text
+                      style={{
+                        fontSize: 10,
+                        paddingHorizontal: 5,
+                        fontWeight: "700",
+                        color: "#000",
+                      }}
+                    >
+                      {dataValue.timeString}
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                    }}
+                  >
+                    <View style={styles.icon}>
+                      <Feather name="navigation" size={16} color="#409EFF" />
+                      <Text
+                        style={{
+                          fontSize: 8,
+                          textAlign: "center",
+                          color: "#409EFF",
+                        }}
+                      >
+                        坐标(lng,lat)
+                      </Text>
+                    </View>
+                    <View style={styles.dataContainer}>
+                      <Text style={styles.data}>
+                        {dataValue.location.longitude}
+                      </Text>
+                      <Text style={styles.data}>
+                        {dataValue.location.latitude}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 8,
+                          opacity: 0.7,
+                          alignSelf: "flex-end",
+                        }}
+                      >
+                        精度:{dataValue.location.accuracy}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                    }}
+                  >
+                    <View style={styles.icon}>
+                      <MaterialCommunityIcons
+                        name="alpha"
+                        size={16}
+                        color="#F56C6C"
+                      />
+                      <Text
+                        style={{
+                          fontSize: 8,
+                          textAlign: "center",
+                          color: "#F56C6C",
+                        }}
+                      >
+                        加速度(x,y,z)
+                      </Text>
+                    </View>
+
+                    <View style={styles.dataContainer}>
+                      {dataValue.accelerometerData != null ? (
+                        <>
+                          <Text style={styles.data}>
+                            {dataValue.accelerometerData.x}
+                          </Text>
+                          <Text style={styles.data}>
+                            {dataValue.accelerometerData.y}
+                          </Text>
+                          <Text style={styles.data}>
+                            {dataValue.accelerometerData.z}
+                          </Text>
+                        </>
+                      ) : (
+                        <Text>null</Text>
+                      )}
+                    </View>
+                  </View>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                    }}
+                  >
+                    <View style={styles.icon}>
+                      <MaterialCommunityIcons
+                        name="axis-arrow"
+                        size={16}
+                        color="#67C23A"
+                      />
+                      <Text
+                        style={{
+                          fontSize: 8,
+                          textAlign: "center",
+                          color: "#67C23A",
+                        }}
+                      >
+                        陀螺仪(x,y,z)
+                      </Text>
+                    </View>
+                    <View style={styles.dataContainer}>
+                      {dataValue.gyroscopeData != null ? (
+                        <>
+                          <Text style={styles.data}>
+                            {dataValue.gyroscopeData.x}
+                          </Text>
+                          <Text style={styles.data}>
+                            {dataValue.gyroscopeData.y}
+                          </Text>
+                          <Text style={styles.data}>
+                            {dataValue.gyroscopeData.z}
+                          </Text>
+                        </>
+                      ) : (
+                        <Text>null</Text>
+                      )}
+                    </View>
+                  </View>
+
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                    }}
+                  >
+                    <View style={styles.icon}>
+                      <FontAwesome name="magnet" size={15} color="#606266" />
+                      <Text
+                        style={{
+                          fontSize: 8,
+                          textAlign: "center",
+                          color: "#606266",
+                        }}
+                      >
+                        磁力计(x,y,z)
+                      </Text>
+                    </View>
+                    <View style={styles.dataContainer}>
+                      {dataValue.magnetometerData != null ? (
+                        <>
+                          <Text style={styles.data}>
+                            {dataValue.magnetometerData.x}
+                          </Text>
+                          <Text style={styles.data}>
+                            {dataValue.magnetometerData.y}
+                          </Text>
+                          <Text style={styles.data}>
+                            {dataValue.magnetometerData.z}
+                          </Text>
+                        </>
+                      ) : (
+                        <Text>null</Text>
+                      )}
+                    </View>
+                  </View>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                    }}
+                  >
+                    <View style={styles.icon}>
+                      <MaterialCommunityIcons
+                        name="weather-cloudy"
+                        size={15}
+                        color="#ffa83b"
+                      />
+                      <Text
+                        style={{
+                          fontSize: 8,
+                          textAlign: "center",
+                          color: "#ffa83b",
+                        }}
+                      >
+                        气压计
+                      </Text>
+                    </View>
+                    <View style={styles.dataContainer}>
+                      {dataValue.barometerData != null ? (
+                        <Text style={styles.data}>
+                          {dataValue.barometerData.pressure}
+                        </Text>
+                      ) : (
+                        <Text>null</Text>
+                      )}
+                    </View>
+                  </View>
+                </View>
+              );
             })}
           </ScrollView>
-          <View style={{ alignItems: "center" }}>
-            <View style={{ width: "70%" }}>
+          <View
+            style={{
+              alignItems: "center",
+              justifyContent: "space-evenly",
+              flexDirection: "row",
+              paddingBottom: 10,
+            }}
+          >
+            <View>
+              <Text style={{ fontSize: 12 }}>
+                数据量:{this.state.data.length}
+              </Text>
+            </View>
+            <View style={{ width: 200 }}>
+              <Text style={{ fontSize: 12, width: 80, alignSelf: "flex-end" }}>
+                间隔:{this.state.timeInterval}s
+              </Text>
               <Slider
-                thumbTintColor="#343434"
-                minimumValue={0.5}
+                minimumValue={1}
                 maximumValue={60}
-                step={0.5}
+                step={1}
                 value={this.state.timeInterval}
-                onValueChange={timeInterval => this.setState({ timeInterval })}
+                minimumTrackTintColor="#111"
+                thumbTintColor="#111"
+                onValueChange={(timeInterval) => {
+                  this.setState({ timeInterval });
+                }}
+                onSlidingComplete={() => {
+                  this.stop().finally(() => {
+                    this.start();
+                  });
+                }}
               />
             </View>
           </View>
         </SafeAreaView>
-      </>
+      </View>
     );
   }
 }
+const styles = StyleSheet.create({
+  icon: {
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginRight: 4,
+    width: 30,
+  },
+  data: {
+    fontSize: 10,
+  },
+  dataContainer: {
+    flex: 1,
+    minHeight: 40,
+    borderBottomWidth: 0.2,
+    alignItems: "flex-end",
+    justifyContent: "center",
+  },
+});
