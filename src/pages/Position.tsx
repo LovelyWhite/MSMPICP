@@ -24,7 +24,7 @@ import {
 import Feather from "react-native-vector-icons/Feather";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
-import AntDesign from "react-native-vector-icons/AntDesign";
+import Entypo from "react-native-vector-icons/Entypo";
 import { getTimeString } from "../utils";
 import {
   LocationData,
@@ -32,6 +32,8 @@ import {
   LocationListener,
   stopListen,
 } from "../modules/geo";
+import { TouchableOpacity } from "react-native-gesture-handler";
+import ThreeAxisSensor from "expo-sensors/build/ThreeAxisSensor";
 
 interface Props {
   navigation: any;
@@ -48,6 +50,7 @@ interface ContextData {
 interface States {
   timeInterval: number;
   data: ContextData[];
+  running: boolean;
 }
 
 export default class PositionScreen extends Component<Props, States> {
@@ -59,6 +62,7 @@ export default class PositionScreen extends Component<Props, States> {
     this.state = {
       data: [],
       timeInterval: 5,
+      running: false,
     };
     this.Loading = null;
     this.a = null;
@@ -68,41 +72,56 @@ export default class PositionScreen extends Component<Props, States> {
     this.created = false; //是否首次获取位置
     this.locationListener = new LocationListener("app1", async (e) => {
       if (!this.created) {
-        this.Loading.stopLoading();
-        try {
+        let p1 = new Promise(async (r, j) => {
           let a_is = await Accelerometer.isAvailableAsync();
           if (a_is) {
             Accelerometer.addListener((accelerometerData) => {
               this.a = accelerometerData;
+              r("ok");
             });
+          } else {
+            r("ok");
           }
+        });
+        let p2 = new Promise(async (r, j) => {
           let b_is = await Barometer.isAvailableAsync();
           if (b_is) {
             Barometer.addListener((barometerData) => {
               this.b = barometerData;
+              r("ok");
             });
+          } else {
+            r("ok");
           }
-          let g_is = Gyroscope.isAvailableAsync();
+        });
+
+        let p3 = new Promise(async (r, j) => {
+          let g_is = await Gyroscope.isAvailableAsync();
           if (g_is) {
             Gyroscope.addListener((gyroscopeData) => {
               this.g = gyroscopeData;
+              r("ok");
             });
+          } else {
+            r("ok");
           }
-          let m_is = Magnetometer.isAvailableAsync();
+        });
+
+        let p4 = new Promise(async (r, j) => {
+          let m_is = await Magnetometer.isAvailableAsync();
           if (m_is) {
             Magnetometer.addListener((magnetometerData) => {
               this.m = magnetometerData;
+              r("ok");
             });
+          } else {
+            r("ok");
           }
-          this.created = true;
-        } catch (e) {
-          console.log(e);
-          Alert.alert("错误", "" + e);
-          this.Loading.stopLoading();
-        }
+        });
         this.created = true;
+        await Promise.all([p1, p2, p3, p4]);
+        this.Loading.stopLoading();
       }
-      // console.log(this.a,this.b,this.g,this.m)
       let dItem: ContextData = {
         timeString: getTimeString(e.time),
         location: e,
@@ -111,10 +130,10 @@ export default class PositionScreen extends Component<Props, States> {
         gyroscopeData: this.g,
         magnetometerData: this.m,
       };
-      let data = this.state.data;
-      data.push(dItem);
-      this.setState({ data }, () => {
-        this.ScrollView.scrollToEnd();
+      let c_vect = [dItem];
+      c_vect = c_vect.concat(this.state.data);
+      this.setState({
+        data: c_vect,
       });
     });
     this._setSensorInterval = this._setSensorInterval.bind(this);
@@ -135,7 +154,10 @@ export default class PositionScreen extends Component<Props, States> {
   }
   async start() {
     this.Loading.startLoading("正在寻找位置");
-    this._setSensorInterval(this.state.timeInterval);
+    this.setState({
+      running: true,
+    });
+
     if (Platform.Version > 22) {
       const { status } = await Permissions.askAsync(Permissions.LOCATION);
       if (status === "granted") {
@@ -144,11 +166,15 @@ export default class PositionScreen extends Component<Props, States> {
           this.state.timeInterval * 1000,
           0,
           this.locationListener
-        ).catch((e) => {
-          console.log(e);
-          Alert.alert("错误", "" + e);
-          this.Loading.stopLoading();
-        });
+        )
+          .then(() => {
+            this._setSensorInterval(this.state.timeInterval);
+          })
+          .catch((e) => {
+            console.log(e);
+            Alert.alert("错误", "" + e);
+            this.Loading.stopLoading();
+          });
       } else {
         Alert.alert("提示", "权限被拒绝");
         this.Loading.stopLoading();
@@ -159,11 +185,15 @@ export default class PositionScreen extends Component<Props, States> {
         this.state.timeInterval * 1000,
         0,
         this.locationListener
-      ).catch((e) => {
-        console.log(e);
-        Alert.alert("错误", "" + e);
-        this.Loading.stopLoading();
-      });
+      )
+        .then(() => {
+          this._setSensorInterval(this.state.timeInterval);
+        })
+        .catch((e) => {
+          console.log(e);
+          Alert.alert("错误", "" + e);
+          this.Loading.stopLoading();
+        });
     }
   }
   stop(): Promise<any> {
@@ -175,40 +205,10 @@ export default class PositionScreen extends Component<Props, States> {
     this.b = null;
     this.g = null;
     this.m = null;
+    this.created = false;
     return stopListen(this.locationListener);
   }
-  componentDidMount() {
-    this.start();
-    // this.setState({
-    //   data:[      {
-    //       timeString: "18:04:52",
-    //       location: {
-    //         time: 1585994692000,
-    //         altitude: 75.37725830078125,
-    //         accuracy: 67.53600311279297,
-    //         longitude: 114.05010223388672,
-    //         latitude: 22.664462327957153,
-    //         provider: "gps",
-    //       },
-    //       accelerometerData: {
-    //         z: 0.6884080767631531,
-    //         y: -0.5791540741920471,
-    //         x: -0.4808875322341919,
-    //       },
-    //       barometerData: { pressure: 1006.2092895507812 },
-    //       gyroscopeData: {
-    //         z: -0.29776039719581604,
-    //         y: -1.6265186071395874,
-    //         x: 1.3208510875701904,
-    //       },
-    //       magnetometerData: {
-    //         z: -37.411964416503906,
-    //         y: -13.246841430664062,
-    //         x: 8.965384483337402,
-    //       },
-    //     },]
-    // })
-  }
+  componentDidMount() {}
   render() {
     return (
       <View style={{ paddingTop: StatusBar.currentHeight, flex: 1 }}>
@@ -369,7 +369,7 @@ export default class PositionScreen extends Component<Props, States> {
                           </Text>
                         </>
                       ) : (
-                        <Text>null</Text>
+                        <Text>无数据</Text>
                       )}
                     </View>
                   </View>
@@ -459,6 +459,35 @@ export default class PositionScreen extends Component<Props, States> {
                 数据量:{this.state.data.length}
               </Text>
             </View>
+            {!this.state.running ? (
+              <View>
+                <TouchableOpacity
+                  onPress={() => {
+                    this.start();
+                  }}
+                >
+                  <View>
+                    <Entypo name="controller-play" size={23} color="green" />
+                  </View>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View>
+                <TouchableOpacity
+                  onPress={() => {
+                    this.stop().finally(() => {
+                      this.setState({
+                        running: false,
+                      });
+                    });
+                  }}
+                >
+                  <View>
+                    <Entypo name="controller-paus" size={18} color="red" />
+                  </View>
+                </TouchableOpacity>
+              </View>
+            )}
             <View style={{ width: 200 }}>
               <Text style={{ fontSize: 12, width: 80, alignSelf: "flex-end" }}>
                 间隔:{this.state.timeInterval}s
@@ -473,11 +502,7 @@ export default class PositionScreen extends Component<Props, States> {
                 onValueChange={(timeInterval) => {
                   this.setState({ timeInterval });
                 }}
-                onSlidingComplete={() => {
-                  this.stop().finally(() => {
-                    this.start();
-                  });
-                }}
+                disabled={this.state.running}
               />
             </View>
           </View>
