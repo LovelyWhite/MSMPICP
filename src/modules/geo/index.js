@@ -1,26 +1,50 @@
-import { NativeModules, NativeEventEmitter } from 'react-native';
+import { NativeModules, NativeEventEmitter } from "react-native";
 
 const { GEO } = NativeModules;
 export class LocationListener {
   constructor(name, onLocationChanged) {
     this.onLocationChanged = onLocationChanged;
     this.name = name;
+    this.eventListener = null;
   }
 }
-function addListener(locationListener){
- let eventEmitter = new NativeEventEmitter(GEO);
- locationListener.eventListener = eventEmitter.addListener(
-    'onLocationChanged',
-    locationListener.onLocationChanged,
+function addListener(locationListener) {
+  let eventEmitter = new NativeEventEmitter(GEO);
+  return eventEmitter.addListener(
+    "onLocationChanged",
+    locationListener.onLocationChanged
   );
-};
-export function startListen(provider, minTime, minDistance, locationListener) {
-  addListener(locationListener);
-  return GEO.startListen(provider, locationListener.name, minTime, minDistance);
 }
-export function stopListen(locationListener) {
-  locationListener.eventListener.remove()
-  return GEO.stopListen(locationListener.name);
+export async function startListen(
+  provider,
+  minTime,
+  minDistance,
+  locationListener
+) {
+  try {
+    let res = await GEO.startListen(
+      provider,
+      locationListener.name,
+      minTime,
+      minDistance
+    );
+    let eventListener = addListener(locationListener);
+    locationListener.eventListener = eventListener;
+    return Promise.resolve(res);
+  } catch (e) {
+    return Promise.reject(e);
+  }
+}
+export async function stopListen(locationListener) {
+  try {
+    let res = await GEO.stopListen(locationListener.name);
+    locationListener.eventListener.remove();
+    return Promise.resolve(res);
+  } catch (e) {
+    return Promise.reject(e);
+  }
+
+  return;
 }
 export function isListening() {
   return GEO.isListening();

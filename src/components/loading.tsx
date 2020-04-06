@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, ActivityIndicator, Platform, StatusBar } from "react-native";
+import { View, Text, ActivityIndicator, Platform, StatusBar, Animated } from "react-native";
 
 
 interface Props {}
@@ -43,7 +43,7 @@ export default class Loading extends React.Component<Props, States> {
               zIndex: 99999
             }}
           >
-            <View
+            <Animated.View
               style={{
                 backgroundColor: "#68696bAA",
                 width: "90%",
@@ -51,7 +51,7 @@ export default class Loading extends React.Component<Props, States> {
                 justifyContent: "center",
                 alignSelf: "center",
                 flexDirection: "row",
-                marginTop:Platform.OS==="android"?StatusBar.currentHeight+5:25,
+                marginTop:30,
                 borderRadius: 5
               }}
             >
@@ -67,7 +67,7 @@ export default class Loading extends React.Component<Props, States> {
               >
                 {this.state.text}
               </Text>
-            </View>
+            </Animated.View>
           </View>
         )}
       </>
