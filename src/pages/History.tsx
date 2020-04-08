@@ -117,7 +117,37 @@ export class HistoryScreen extends React.Component<Props, States> {
                       </Text>
                     </View>
                     <View style={{ flex: 1 }}></View>
-                    <TouchableOpacity onPress={() => {}}>
+                    <TouchableOpacity onPress={() => {
+                         Alert.alert("提示", "确认上传", [
+                          {
+                            onPress: () => {
+                             RNFS.uploadFiles( {
+                              toUrl: "http://localhost:3000/upload",
+                              files: [{
+                                name: file.name,
+                                filename: file.name,
+                                filepath: file.path,
+                                filetype:"txt"
+                              }],
+                              method: 'POST',
+                              headers: {
+                                  'Accept': 'application/json',
+                              },
+                          }).promise.then((v)=>{
+
+                          }).catch(e=>{
+                            console.log(e)
+                          })
+                            },
+                            text: "ok",
+                            style: "default",
+                          },
+                          {
+                            text: "cancel",
+                            style: "cancel",
+                          },
+                        ]);
+                    }}>
                       <MaterialIcons
                         name="file-upload"
                         size={24}
