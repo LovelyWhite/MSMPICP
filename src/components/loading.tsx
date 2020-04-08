@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, ActivityIndicator, Platform, StatusBar, Animated } from "react-native";
+import { View, Text, ActivityIndicator, Animated } from "react-native";
 
 
 interface Props {}
