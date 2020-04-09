@@ -582,9 +582,7 @@ export default class PositionScreen extends Component<Props, States> {
                   justifyContent: "center",
                   alignItems: "center",
                 }}
-                onPress={() => {
-                  this.start();
-                }}
+                onPress={this.start}
               >
                 <Entypo name="controller-play" size={23} color="green" />
               </TouchableOpacity>

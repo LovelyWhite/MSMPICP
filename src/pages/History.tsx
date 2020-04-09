@@ -13,7 +13,7 @@ import AntDesign from "react-native-vector-icons/AntDesign";
 import Loading from "../components/loading";
 import { TouchableOpacity, ScrollView } from "react-native-gesture-handler";
 import RNFS from "react-native-fs";
-import { getTimeString } from "../utils";
+import { getTimeString, pushData } from "../utils";
 interface Props {
   navigation: any;
 }
@@ -36,7 +36,7 @@ export class HistoryScreen extends React.Component<Props, States> {
           files,
         });
       })
-      .catch((e) => {});
+      .catch((e) => { });
   }
   componentDidMount() {
     this.readFiles();
@@ -90,54 +90,47 @@ export class HistoryScreen extends React.Component<Props, States> {
               <Text>无数据</Text>
             </View>
           ) : (
-            <ScrollView style={{ flex: 1 }}>
-              {this.state.files.map((file, index) => {
-                return (
-                  <View
-                    style={{
-                      height: 50,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      paddingHorizontal: 20,
-                    }}
-                    key={index}
-                  >
-                    <AntDesign
-                      name="file1"
-                      size={24}
-                      style={{ paddingRight: 10 }}
-                    />
-                    <View>
-                      <Text>
-                        Size:
+              <ScrollView style={{ flex: 1 }}>
+                {this.state.files.map((file, index) => {
+                  return (
+                    <View
+                      style={{
+                        height: 50,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        paddingHorizontal: 20,
+                      }}
+                      key={index}
+                    >
+                      <AntDesign
+                        name="file1"
+                        size={24}
+                        style={{ paddingRight: 10 }}
+                      />
+                      <View>
+                        <Text>
+                          Size:
                         {(Number.parseInt(file.size, 10) / 1024).toFixed(2)}KB
                       </Text>
-                      <Text>
-                        保存时间:{getTimeString(file.mtime.getTime())}
-                      </Text>
-                    </View>
-                    <View style={{ flex: 1 }}></View>
-                    <TouchableOpacity onPress={() => {
-                         Alert.alert("提示", "确认上传", [
+                        <Text>
+                          保存时间:{getTimeString(file.mtime.getTime())}
+                        </Text>
+                      </View>
+                      <View style={{ flex: 1 }}></View>
+                      <TouchableOpacity onPress={() => {
+                        Alert.alert("提示", "确认上传", [
                           {
-                            onPress: () => {
-                             RNFS.uploadFiles( {
-                              toUrl: "http://localhost:3000/upload",
-                              files: [{
-                                name: file.name,
-                                filename: file.name,
-                                filepath: file.path,
-                                filetype:"txt"
-                              }],
-                              method: 'POST',
-                              headers: {
-                                  'Accept': 'application/json',
-                              },
-                          }).promise.then((v)=>{
+                            onPress: async () => {
+                              try {
+                                let res = await RNFS.readFile(file.path, "utf8");
+                                let result = await pushData("/upload",res);
+                                console.log(result)
+                              }catch(e)
+                              {
+                                console.log(e);
+                              }finally{
 
-                          }).catch(e=>{
-                            console.log(e)
-                          })
+                              }
                             },
                             text: "ok",
                             style: "default",
@@ -147,40 +140,40 @@ export class HistoryScreen extends React.Component<Props, States> {
                             style: "cancel",
                           },
                         ]);
-                    }}>
-                      <MaterialIcons
-                        name="file-upload"
-                        size={24}
-                        color="green"
-                      />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => {
-                        Alert.alert("提示", "确认删除", [
-                          {
-                            onPress: () => {
-                              RNFS.unlink(file.path).then(() => {
-                                Alert.alert("提示", "删除成功");
-                                this.readFiles();
-                              });
+                      }}>
+                        <MaterialIcons
+                          name="file-upload"
+                          size={24}
+                          color="green"
+                        />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => {
+                          Alert.alert("提示", "确认删除", [
+                            {
+                              onPress: () => {
+                                RNFS.unlink(file.path).then(() => {
+                                  Alert.alert("提示", "删除成功");
+                                  this.readFiles();
+                                });
+                              },
+                              text: "ok",
+                              style: "default",
                             },
-                            text: "ok",
-                            style: "default",
-                          },
-                          {
-                            text: "cancel",
-                            style: "cancel",
-                          },
-                        ]);
-                      }}
-                    >
-                      <MaterialIcons name="delete" size={24} color="red" />
-                    </TouchableOpacity>
-                  </View>
-                );
-              })}
-            </ScrollView>
-          )}
+                            {
+                              text: "cancel",
+                              style: "cancel",
+                            },
+                          ]);
+                        }}
+                      >
+                        <MaterialIcons name="delete" size={24} color="red" />
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
+              </ScrollView>
+            )}
         </SafeAreaView>
       </View>
     );
