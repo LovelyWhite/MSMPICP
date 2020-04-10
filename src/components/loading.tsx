@@ -1,7 +1,6 @@
 import React from "react";
 import { View, Text, ActivityIndicator, Animated } from "react-native";
 
-
 interface Props {}
 interface States {
   disabled: boolean;
@@ -12,18 +11,23 @@ export default class Loading extends React.Component<Props, States> {
     super(props);
     this.state = {
       disabled: true,
-      text: ""
+      text: "",
     };
   }
   startLoading(text: string) {
     this.setState({
       disabled: false,
-      text
+      text,
     });
   }
   stopLoading() {
     this.setState({
-      disabled: true
+      disabled: true,
+    });
+  }
+  setText(text: string) {
+    this.setState({
+      text,
     });
   }
   render() {
@@ -40,7 +44,7 @@ export default class Loading extends React.Component<Props, States> {
               right: 0,
               bottom: 0,
               backgroundColor: "#68696b77",
-              zIndex: 99999
+              zIndex: 99999,
             }}
           >
             <Animated.View
@@ -51,18 +55,18 @@ export default class Loading extends React.Component<Props, States> {
                 justifyContent: "center",
                 alignSelf: "center",
                 flexDirection: "row",
-                marginTop:30,
-                borderRadius: 5
+                marginTop: 30,
+                borderRadius: 5,
               }}
             >
               <ActivityIndicator color="#FFFFFFEE" size={14} />
               <Text
                 style={{
                   paddingHorizontal: 10,
-                  lineHeight:30,
+                  lineHeight: 30,
                   fontSize: 12,
                   color: "#FFFFFFee",
-                  textAlign: "center"
+                  textAlign: "center",
                 }}
               >
                 {this.state.text}
