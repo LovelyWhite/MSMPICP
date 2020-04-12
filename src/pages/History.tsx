@@ -37,7 +37,7 @@ export class HistoryScreen extends React.Component<Props, States> {
           files,
         });
       })
-      .catch((e) => { });
+      .catch((e) => {});
   }
   upload(file: RNFS.ReadDirItem) {
     const loading = this.Loading;
@@ -129,26 +129,26 @@ export class HistoryScreen extends React.Component<Props, States> {
               <Text>无数据</Text>
             </View>
           ) : (
-              <ScrollView style={{ flex: 1 }}>
-                {this.state.files.map((file, index) => {
-                  return (
-                    <View
-                      style={{
-                        height: 50,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        paddingHorizontal: 20,
-                      }}
-                      key={index}
-                    >
-                      <AntDesign
-                        name="file1"
-                        size={24}
-                        style={{ paddingRight: 10 }}
-                      />
-                      <View>
-                        <Text>
-                          Size:
+            <ScrollView style={{ flex: 1 }}>
+              {this.state.files.map((file, index) => {
+                return (
+                  <View
+                    style={{
+                      height: 50,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      paddingHorizontal: 20,
+                    }}
+                    key={index}
+                  >
+                    <AntDesign
+                      name="file1"
+                      size={24}
+                      style={{ paddingRight: 10 }}
+                    />
+                    <View>
+                      <Text>
+                        Size:
                         {(Number.parseInt(file.size, 10) / 1024).toFixed(2)}KB
                       </Text>
                       <Text>
@@ -177,42 +177,43 @@ export class HistoryScreen extends React.Component<Props, States> {
                                 this.readFiles();
                               });
                             },
-                          ]);
-                        }}
-                      >
-                        <MaterialIcons
-                          name="file-upload"
-                          size={24}
-                          color="green"
-                        />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() => {
-                          Alert.alert("提示", "确认删除", [
-                            {
-                              onPress: () => {
-                                RNFS.unlink(file.path).then(() => {
-                                  Alert.alert("提示", "删除成功");
-                                  this.readFiles();
-                                });
-                              },
-                              text: "ok",
-                              style: "default",
+                          },
+                        ]);
+                      }}
+                    >
+                      <MaterialIcons
+                        name="file-upload"
+                        size={24}
+                        color="green"
+                      />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => {
+                        Alert.alert("提示", "确认删除", [
+                          {
+                            onPress: () => {
+                              RNFS.unlink(file.path).then(() => {
+                                Alert.alert("提示", "删除成功");
+                                this.readFiles();
+                              });
                             },
-                            {
-                              text: "cancel",
-                              style: "cancel",
-                            },
-                          ]);
-                        }}
-                      >
-                        <MaterialIcons name="delete" size={24} color="red" />
-                      </TouchableOpacity>
-                    </View>
-                  );
-                })}
-              </ScrollView>
-            )}
+                            text: "ok",
+                            style: "default",
+                          },
+                          {
+                            text: "cancel",
+                            style: "cancel",
+                          },
+                        ]);
+                      }}
+                    >
+                      <MaterialIcons name="delete" size={24} color="red" />
+                    </TouchableOpacity>
+                  </View>
+                );
+              })}
+            </ScrollView>
+          )}
         </SafeAreaView>
       </View>
     );
