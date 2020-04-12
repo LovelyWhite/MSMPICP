@@ -55,9 +55,12 @@ export function getTimeString(timestamp: number): string {
   }
 }
 
-export const URL = "http://192.168.1.103:5000";
+export const URL = "http://192.168.43.219:5000";
 export function pushData(url:string,values: any,onUploadProgress?:(progressEvent: any) => void) {
   return axios.post(URL+url, values,{
+    headers:{
+      "Content-Type":"application/json"
+    },
     onUploadProgress:onUploadProgress,
   });
 }
