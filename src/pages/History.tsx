@@ -40,7 +40,6 @@ export class HistoryScreen extends React.Component<Props, States> {
       .catch((e) => {});
   }
   upload(file: RNFS.ReadDirItem) {
-    const loading = this.Loading;
     Alert.alert("提示", "确认上传", [
       {
         onPress: async () => {
@@ -53,6 +52,7 @@ export class HistoryScreen extends React.Component<Props, States> {
             let uploadData = {
               uniqueId,
               model,
+              brand,
               data: res,
             };
             let result = await pushData("/upload", uploadData, (pe) => {
@@ -60,7 +60,7 @@ export class HistoryScreen extends React.Component<Props, States> {
                 "正在上传 " + (((pe.loaded / pe.total) * 100) | 0) + "%"
               );
             });
-            console.log(result);
+            Alert.alert("提示",result.data)
           } catch (e) {
             console.log(e);
             Alert.alert("错误", "" + e);
@@ -159,26 +159,6 @@ export class HistoryScreen extends React.Component<Props, States> {
                     <TouchableOpacity
                       onPress={() => {
                         this.upload(file);
-                      }}
-                    >
-                      <MaterialIcons
-                        name="file-upload"
-                        size={24}
-                        color="green"
-                      />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => {
-                        Alert.alert("提示", "确认删除", [
-                          {
-                            onPress: () => {
-                              RNFS.unlink(file.path).then(() => {
-                                Alert.alert("提示", "删除成功");
-                                this.readFiles();
-                              });
-                            },
-                          },
-                        ]);
                       }}
                     >
                       <MaterialIcons
