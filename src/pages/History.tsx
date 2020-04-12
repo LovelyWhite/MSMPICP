@@ -7,12 +7,13 @@ import {
   Text,
   Alert,
 } from "react-native";
+import DeviceInfo from "react-native-device-info";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import Entypo from "react-native-vector-icons/Entypo";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import Loading from "../components/loading";
 import { TouchableOpacity, ScrollView } from "react-native-gesture-handler";
-import RNFS from "react-native-fs";
+import RNFS, { uploadFiles } from "react-native-fs";
 import { getTimeString, pushData } from "../utils";
 interface Props {
   navigation: any;
@@ -37,6 +38,44 @@ export class HistoryScreen extends React.Component<Props, States> {
         });
       })
       .catch((e) => { });
+  }
+  upload(file: RNFS.ReadDirItem) {
+    const loading = this.Loading;
+    Alert.alert("提示", "确认上传", [
+      {
+        onPress: async () => {
+          const model = DeviceInfo.getModel();
+          const uniqueId = DeviceInfo.getUniqueId();
+          const brand = DeviceInfo.getBrand();
+          try {
+            this.Loading.startLoading("正在上传 0%");
+            let res = await RNFS.readFile(file.path, "utf8");
+            let uploadData = {
+              uniqueId,
+              model,
+              data: res,
+            };
+            let result = await pushData("/upload", uploadData, (pe) => {
+              this.Loading.setText(
+                "正在上传 " + (((pe.loaded / pe.total) * 100) | 0) + "%"
+              );
+            });
+            console.log(result);
+          } catch (e) {
+            console.log(e);
+            Alert.alert("错误", "" + e);
+          } finally {
+            this.Loading.stopLoading();
+          }
+        },
+        text: "ok",
+        style: "default",
+      },
+      {
+        text: "cancel",
+        style: "cancel",
+      },
+    ]);
   }
   componentDidMount() {
     this.readFiles();
@@ -112,50 +151,31 @@ export class HistoryScreen extends React.Component<Props, States> {
                           Size:
                         {(Number.parseInt(file.size, 10) / 1024).toFixed(2)}KB
                       </Text>
-                        <Text>
-                          保存时间:{getTimeString(file.mtime.getTime())}
-                        </Text>
-                      </View>
-                      <View style={{ flex: 1 }}></View>
-                      <TouchableOpacity
-                        onPress={() => {
-                          const loading = this.Loading;
-                          Alert.alert("提示", "确认上传", [
-                            {
-                              onPress: async () => {
-                                try {
-                                  this.Loading.startLoading("正在上传 0%");
-                                  let res = await RNFS.readFile(
-                                    file.path,
-                                    "utf8"
-                                  );
-                                  let result = await pushData(
-                                    "/upload",
-                                    res,
-                                    (pe) => {
-                                      this.Loading.setText(
-                                        "正在上传 " +
-                                        (((pe.loaded / pe.total) * 100) | 0) +
-                                        "%"
-                                      );
-                                    }
-                                  );
-                                  console.log(result);
-                                  Alert.alert("提示",result.data);
-                                } catch (e) {
-                                  console.log(e);
-                                  Alert.alert("错误", "" + e);
-                                }
-                                finally{
-                                  this.Loading.stopLoading();
-                                }
-                              },
-                              text: "ok",
-                              style: "default",
-                            },
-                            {
-                              text: "cancel",
-                              style: "cancel",
+                      <Text>
+                        保存时间:{getTimeString(file.mtime.getTime())}
+                      </Text>
+                    </View>
+                    <View style={{ flex: 1 }}></View>
+                    <TouchableOpacity
+                      onPress={() => {
+                        this.upload(file);
+                      }}
+                    >
+                      <MaterialIcons
+                        name="file-upload"
+                        size={24}
+                        color="green"
+                      />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => {
+                        Alert.alert("提示", "确认删除", [
+                          {
+                            onPress: () => {
+                              RNFS.unlink(file.path).then(() => {
+                                Alert.alert("提示", "删除成功");
+                                this.readFiles();
+                              });
                             },
                           ]);
                         }}

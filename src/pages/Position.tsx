@@ -25,6 +25,7 @@ import {
 } from "expo-sensors";
 import { Badge } from "react-native-elements";
 import Feather from "react-native-vector-icons/Feather";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import AntDesign from "react-native-vector-icons/AntDesign";
@@ -63,7 +64,6 @@ export default class PositionScreen extends Component<Props, States> {
 
   constructor(props: Readonly<Props>) {
     super(props);
-    this.data = []; //展示的数据
     this.state = {
       data: [],
       timeInterval: 5,
@@ -145,6 +145,7 @@ export default class PositionScreen extends Component<Props, States> {
     this.start = this.start.bind(this);
     this.stop = this.stop.bind(this);
     this.save = this.save.bind(this);
+    this.clear = this.clear.bind(this);
   }
   a: ThreeAxisMeasurement;
   b: BarometerMeasurement;
@@ -241,7 +242,6 @@ export default class PositionScreen extends Component<Props, States> {
         this.Loading.startLoading("正在保存数据");
 
         //创建文件夹
-
         RNFS.mkdir(RNFS.DocumentDirectoryPath + "/storedata")
           .then(() => {
             //写文件
@@ -251,6 +251,9 @@ export default class PositionScreen extends Component<Props, States> {
               "utf8"
             )
               .then(() => {
+                this.setState({
+                  data: [],
+                });
                 Alert.alert("提示", "数据保存成功");
               })
               .catch((e) => {
@@ -272,6 +275,23 @@ export default class PositionScreen extends Component<Props, States> {
     } else {
       Alert.alert("提示", "请先停止数据收集");
     }
+  }
+  clear() {
+    Alert.alert("提示", "确定清空当前数据？", [
+      {
+        text: "ok",
+        onPress: () => {
+          this.setState({
+            data: [],
+          });
+        },
+        style: "default",
+      },
+      {
+        text: "cancel",
+        style: "cancel",
+      },
+    ]);
   }
   componentDidMount() {}
   render() {
@@ -310,6 +330,11 @@ export default class PositionScreen extends Component<Props, States> {
             )}
             <Text style={{ fontSize: 10, marginLeft: 10 }}></Text>
             <View style={{ flex: 1 }}></View>
+            <View style={{ marginRight: 20 }}>
+              <TouchableOpacity onPress={this.clear}>
+                <MaterialIcons name="clear" size={25} />
+              </TouchableOpacity>
+            </View>
             <View style={{ marginRight: 20 }}>
               <TouchableOpacity onPress={this.save}>
                 <AntDesign name="save" size={25} />
