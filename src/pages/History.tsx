@@ -53,14 +53,14 @@ export class HistoryScreen extends React.Component<Props, States> {
               uniqueId,
               model,
               brand,
-              data: res,
+              data: JSON.parse(res),
             };
             let result = await pushData("/upload", uploadData, (pe) => {
               this.Loading.setText(
                 "正在上传 " + (((pe.loaded / pe.total) * 100) | 0) + "%"
               );
             });
-            Alert.alert("提示",result.data)
+            Alert.alert("提示", result.data);
           } catch (e) {
             console.log(e);
             Alert.alert("错误", "" + e);
