@@ -192,9 +192,9 @@ export default class PositionScreen extends Component<Props, States> {
         }
       } else {
         startListen(
-          "passive",
+          "gps",
           this.state.timeInterval * 1000,
-          150,
+          0,
           this.locationListener
         )
           .then(() => {
