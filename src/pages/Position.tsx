@@ -330,14 +330,14 @@ export default class PositionScreen extends Component<Props, States> {
             )}
             <Text style={{ fontSize: 10, marginLeft: 10 }}></Text>
             <View style={{ flex: 1 }}></View>
-            <View style={{ marginRight: 20 }}>
+            <View style={{ marginRight: 15 }}>
               <TouchableOpacity onPress={this.clear}>
-                <MaterialIcons name="clear" size={25} />
+                <MaterialIcons name="clear" size={20} color="red" />
               </TouchableOpacity>
             </View>
-            <View style={{ marginRight: 20 }}>
+            <View style={{ marginRight: 15 }}>
               <TouchableOpacity onPress={this.save}>
-                <AntDesign name="save" size={25} />
+                <AntDesign name="save" size={20} color="green" />
               </TouchableOpacity>
             </View>
             <View style={{ marginRight: 20 }}>
@@ -346,7 +346,7 @@ export default class PositionScreen extends Component<Props, States> {
                   this.props.navigation.navigate("History");
                 }}
               >
-                <MaterialCommunityIcons name="history" size={25} />
+                <MaterialCommunityIcons name="history" size={20} />
               </TouchableOpacity>
             </View>
           </View>

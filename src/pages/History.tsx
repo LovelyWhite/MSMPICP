@@ -8,6 +8,7 @@ import {
   Alert,
 } from "react-native";
 import DeviceInfo from "react-native-device-info";
+import { PERMISSIONS, request } from 'react-native-permissions';
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import Entypo from "react-native-vector-icons/Entypo";
 import AntDesign from "react-native-vector-icons/AntDesign";
@@ -37,7 +38,7 @@ export class HistoryScreen extends React.Component<Props, States> {
           files,
         });
       })
-      .catch((e) => {});
+      .catch((e) => { });
   }
   upload(file: RNFS.ReadDirItem) {
     Alert.alert("提示", "确认上传", [
@@ -77,6 +78,42 @@ export class HistoryScreen extends React.Component<Props, States> {
       },
     ]);
   }
+  async export(file: RNFS.ReadDirItem) {
+    let rs = "denied";
+    if (Platform.OS === "android") {
+      rs = await request(PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE)
+    }
+
+    if (rs === "granted") {
+      this.Loading.startLoading("正在导出数据");
+      //创建文件夹
+      RNFS.mkdir(RNFS.DownloadDirectoryPath + "/storedata")
+        .then(() => {
+          //写文件
+          RNFS.copyFile(
+            file.path,
+            RNFS.DownloadDirectoryPath + "/storedata/" + file.name)
+            .then(() => {
+              Alert.alert("提示", "数据导出成功");
+            })
+            .catch((e) => {
+              Alert.alert("错误", "" + e);
+            })
+            .finally(() => {
+              this.Loading.stopLoading();
+            });
+        })
+        .catch((e) => {
+          Alert.alert("错误", "" + e);
+        })
+        .finally(() => {
+          this.Loading.stopLoading();
+        });
+    }
+    else{
+      Alert.alert("提示","请允许存储权限")
+    }
+  }
   componentDidMount() {
     this.readFiles();
   }
@@ -109,7 +146,7 @@ export class HistoryScreen extends React.Component<Props, States> {
                   this.props.navigation.goBack();
                 }}
               >
-                <MaterialIcons name="arrow-back" size={25} />
+                <MaterialIcons name="arrow-back" size={20} />
               </TouchableOpacity>
             </View>
             <Text style={{ fontSize: 20, color: "#000", marginLeft: 20 }}>
@@ -129,71 +166,82 @@ export class HistoryScreen extends React.Component<Props, States> {
               <Text>无数据</Text>
             </View>
           ) : (
-            <ScrollView style={{ flex: 1 }}>
-              {this.state.files.map((file, index) => {
-                return (
-                  <View
-                    style={{
-                      height: 50,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      paddingHorizontal: 20,
-                    }}
-                    key={index}
-                  >
-                    <AntDesign
-                      name="file1"
-                      size={24}
-                      style={{ paddingRight: 10 }}
-                    />
-                    <View>
-                      <Text>
-                        Size:
+              <ScrollView style={{ flex: 1 }}>
+                {this.state.files.map((file, index) => {
+                  return (
+                    <View
+                      style={{
+                        height: 70,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        paddingHorizontal: 20,
+                        borderBottomColor: "#00000011",
+                        borderBottomWidth: index === this.state.files.length - 1 ? 0 : 0.3333
+                      }}
+                      key={index}
+                    >
+                      <AntDesign
+                        name="file1"
+                        size={24}
+                        style={{ paddingRight: 10 }}
+                      />
+                      <View>
+                        <Text>
+                          Size:
                         {(Number.parseInt(file.size, 10) / 1024).toFixed(2)}KB
                       </Text>
-                      <Text>
-                        保存时间:{getTimeString(file.mtime.getTime())}
-                      </Text>
-                    </View>
-                    <View style={{ flex: 1 }}></View>
-                    <TouchableOpacity
-                      onPress={() => {
-                        this.upload(file);
-                      }}
-                    >
-                      <MaterialIcons
-                        name="file-upload"
-                        size={24}
-                        color="green"
-                      />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => {
-                        Alert.alert("提示", "确认删除", [
-                          {
-                            onPress: () => {
-                              RNFS.unlink(file.path).then(() => {
-                                Alert.alert("提示", "删除成功");
-                                this.readFiles();
-                              });
+                        <Text>
+                          保存时间:{getTimeString(file.mtime.getTime())}
+                        </Text>
+                      </View>
+                      <View style={{ flex: 1 }}></View>
+                      <TouchableOpacity
+                        onPress={() => {
+                          this.export(file);
+                        }}
+                      >
+                        <AntDesign name="save" size={20} />
+                      </TouchableOpacity>
+                      <View style={{ marginRight: 10 }}></View>
+                      <TouchableOpacity
+                        onPress={() => {
+                          this.upload(file);
+                        }}
+                      >
+                        <MaterialIcons
+                          name="file-upload"
+                          size={20}
+                          color="green"
+                        />
+                      </TouchableOpacity>
+                      <View style={{ marginRight: 10 }}></View>
+                      <TouchableOpacity
+                        onPress={() => {
+                          Alert.alert("提示", "确认删除", [
+                            {
+                              onPress: () => {
+                                RNFS.unlink(file.path).then(() => {
+                                  Alert.alert("提示", "删除成功");
+                                  this.readFiles();
+                                });
+                              },
+                              text: "ok",
+                              style: "default",
                             },
-                            text: "ok",
-                            style: "default",
-                          },
-                          {
-                            text: "cancel",
-                            style: "cancel",
-                          },
-                        ]);
-                      }}
-                    >
-                      <MaterialIcons name="delete" size={24} color="red" />
-                    </TouchableOpacity>
-                  </View>
-                );
-              })}
-            </ScrollView>
-          )}
+                            {
+                              text: "cancel",
+                              style: "cancel",
+                            },
+                          ]);
+                        }}
+                      >
+                        <MaterialIcons name="delete" size={20} color="red" />
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
+              </ScrollView>
+            )}
         </SafeAreaView>
       </View>
     );
