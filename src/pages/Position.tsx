@@ -24,6 +24,7 @@ import {
   ThreeAxisMeasurement,
 } from "expo-sensors";
 import { Badge } from "react-native-elements";
+import { useFocusEffect } from "@react-navigation/native";
 import Feather from "react-native-vector-icons/Feather";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
@@ -61,7 +62,7 @@ export default class PositionScreen extends Component<Props, States> {
   created: boolean;
   ScrollView: ScrollView;
   data: ContextData[]; //缓存数据
-
+  _unsubscribe: any;
   constructor(props: Readonly<Props>) {
     super(props);
     this.state = {
@@ -69,6 +70,7 @@ export default class PositionScreen extends Component<Props, States> {
       timeInterval: 5,
       running: false,
     };
+
     this.Loading = null;
     this.a = null;
     this.b = null;
@@ -293,27 +295,33 @@ export default class PositionScreen extends Component<Props, States> {
       },
     ]);
   }
-  componentDidMount() {}
+  componentDidMount() {
+    this._unsubscribe = this.props.navigation.addListener("focus", () => {
+      StatusBar.setBackgroundColor("#00000000");
+      StatusBar.setTranslucent(true);
+    });
+  }
+  componentWillUnmount() {
+    this._unsubscribe && this._unsubscribe();
+  }
   render() {
     return (
       <View style={{ paddingTop: StatusBar.currentHeight, flex: 1 }}>
-        <StatusBar
-          translucent={true}
-          backgroundColor={Platform.Version > 22 ? "#00000000" : "#c0c0c0"}
-          barStyle="dark-content"
-        />
         <Loading
           ref={(ref) => {
             this.Loading = ref;
           }}
+        />
+        <StatusBar
+          translucent={true}
+          backgroundColor="#00000000"
+          barStyle="dark-content"
         />
         <SafeAreaView style={{ flex: 1 }}>
           <View
             style={{
               height: 50,
               alignItems: "center",
-              borderBottomWidth: 0.3333,
-              borderBottomColor: "#00000011",
               flexDirection: "row",
             }}
           >
@@ -330,18 +338,19 @@ export default class PositionScreen extends Component<Props, States> {
             )}
             <Text style={{ fontSize: 10, marginLeft: 10 }}></Text>
             <View style={{ flex: 1 }}></View>
-            <View style={{ marginRight: 15 }}>
-              <TouchableOpacity onPress={this.clear}>
+            <View style={{ marginRight: 5 }}>
+              <TouchableOpacity style={{ padding: 5 }} onPress={this.clear}>
                 <MaterialIcons name="clear" size={20} color="red" />
               </TouchableOpacity>
             </View>
-            <View style={{ marginRight: 15 }}>
-              <TouchableOpacity onPress={this.save}>
+            <View style={{ marginRight: 5 }}>
+              <TouchableOpacity style={{ padding: 5 }} onPress={this.save}>
                 <AntDesign name="save" size={20} color="green" />
               </TouchableOpacity>
             </View>
-            <View style={{ marginRight: 20 }}>
+            <View style={{ marginRight: 15 }}>
               <TouchableOpacity
+                style={{ padding: 5 }}
                 onPress={() => {
                   this.props.navigation.navigate("History");
                 }}
@@ -594,9 +603,7 @@ export default class PositionScreen extends Component<Props, States> {
               alignItems: "center",
               justifyContent: "space-around",
               flexDirection: "row",
-              height: 40,
-              borderTopWidth: 0.3333,
-              borderTopColor: "#00000022",
+              height: 50,
             }}
           >
             {!this.state.running ? (
