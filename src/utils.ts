@@ -30,13 +30,12 @@ export function getTimeString(timestamp: number): string {
       //今天
 
       return h_s + ":" + m_s + ":" + s_s;
-
     } else if (nowDate - msgDate === 1) {
-      return "昨天 " +h_s + ":" + m_s 
+      return "昨天 " + h_s + ":" + m_s;
       //昨天
     } else if (nowDate - msgDate === 2) {
       //前天
-      return "前天 " +h_s + ":" + m_s 
+      return "前天 " + h_s + ":" + m_s;
     } else {
       return msgMouth + "-" + msgDate + " " + msgHours + ":" + msgMinutes;
     }
@@ -55,12 +54,16 @@ export function getTimeString(timestamp: number): string {
   }
 }
 
-export const URL = "http://localhost:5000";
-export function pushData(url:string,values: any,onUploadProgress?:(progressEvent: any) => void) {
-  return axios.post(URL+url, values,{
-    headers:{
-      "Content-Type":"application/json"
+export const URL = "https://suxitech.work";
+export function pushData(
+  url: string,
+  values: any,
+  onUploadProgress?: (progressEvent: any) => void
+) {
+  return axios.post(URL + url, values, {
+    headers: {
+      "Content-Type": "application/json",
     },
-    onUploadProgress:onUploadProgress,
+    onUploadProgress: onUploadProgress,
   });
 }
