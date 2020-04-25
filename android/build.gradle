@@ -3,7 +3,7 @@
 buildscript {
     ext {
         buildToolsVersion = "28.0.3"
-        minSdkVersion = 21
+        minSdkVersion = 24
         compileSdkVersion = 28
         targetSdkVersion = 27
         supportLibVersion = "28.0.0"
@@ -39,13 +39,8 @@ allprojects {
     compileSdkVersion   = 28
     targetSdkVersion    = 27
     buildToolsVersion   = "28.0.3"
-    minSdkVersion       = 21
+    minSdkVersion       = 24
     supportLibVersion   = "28.0.0"
     playServicesVersion = "17.0.0" // or set latest version
     androidMapsUtilsVersion = "0.6.2"
  }
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.7'
-    distributionUrl = distributionUrl.replace("bin", "all")
-}

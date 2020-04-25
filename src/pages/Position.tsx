@@ -9,6 +9,7 @@ import {
   ScrollView,
   Platform,
 } from "react-native";
+import SplashScreen from "react-native-splash-screen";
 import Slider from "@react-native-community/slider";
 import * as Permissions from "expo-permissions";
 import Loading from "../components/loading";
@@ -70,7 +71,11 @@ export default class PositionScreen extends Component<Props, States> {
       timeInterval: 5,
       running: false,
     };
-
+    this._unsubscribe = this.props.navigation.addListener("focus", () => {
+      StatusBar.setBackgroundColor("#00000000");
+      StatusBar.setBarStyle("dark-content");
+      StatusBar.setTranslucent(true);
+    });
     this.Loading = null;
     this.a = null;
     this.b = null;
@@ -168,35 +173,12 @@ export default class PositionScreen extends Component<Props, States> {
       Alert.alert("提示", "请打开GPS");
     } else {
       this.Loading.startLoading("正在寻找位置");
-      if (Platform.Version > 22) {
-        const { status } = await Permissions.askAsync(Permissions.LOCATION);
-        if (status === "granted") {
-          startListen(
-            "gps",
-            this.state.timeInterval * 1000,
-            0,
-            this.locationListener
-          )
-            .then(() => {
-              this._setSensorInterval(this.state.timeInterval);
-              this.setState({
-                running: true,
-              });
-            })
-            .catch((e) => {
-              console.log(e);
-              Alert.alert("错误", "" + e);
-              this.Loading.stopLoading();
-            });
-        } else {
-          Alert.alert("提示", "权限被拒绝");
-          this.Loading.stopLoading();
-        }
-      } else {
+      const { status } = await Permissions.askAsync(Permissions.LOCATION);
+      if (status === "granted") {
         startListen(
           "gps",
           this.state.timeInterval * 1000,
-          0,
+          10,
           this.locationListener
         )
           .then(() => {
@@ -296,10 +278,7 @@ export default class PositionScreen extends Component<Props, States> {
     ]);
   }
   componentDidMount() {
-    this._unsubscribe = this.props.navigation.addListener("focus", () => {
-      StatusBar.setBackgroundColor("#00000000");
-      StatusBar.setTranslucent(true);
-    });
+    SplashScreen.hide();
   }
   componentWillUnmount() {
     this._unsubscribe && this._unsubscribe();
@@ -312,11 +291,7 @@ export default class PositionScreen extends Component<Props, States> {
             this.Loading = ref;
           }}
         />
-        <StatusBar
-          translucent={true}
-          backgroundColor="#00000000"
-          barStyle="dark-content"
-        />
+
         <SafeAreaView style={{ flex: 1 }}>
           <View
             style={{

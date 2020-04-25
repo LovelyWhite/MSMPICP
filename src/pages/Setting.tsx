@@ -30,13 +30,13 @@ export class SettingScreen extends React.Component<Props, States> {
   constructor(props: Readonly<Props>) {
     super(props);
     this.state = {};
-  }
-  componentDidMount() {
     this._unsubscribe = this.props.navigation.addListener("focus", () => {
       StatusBar.setBackgroundColor("#00000000");
       StatusBar.setTranslucent(true);
+      StatusBar.setBarStyle("dark-content");
     });
   }
+  componentDidMount() {}
   componentWillUnmount() {
     this._unsubscribe && this._unsubscribe();
   }
@@ -90,7 +90,7 @@ export class SettingScreen extends React.Component<Props, States> {
             <View style={{ marginTop: 5 }}></View>
             <LinkItem
               title="关于"
-              description="本机信息将作为唯一识别码进行数据上传，重新安装软件将会导致唯一码变化"
+              description="唯一码将作为服务器识别设备的凭据上传到服务器"
             />
             <View style={{ marginTop: 5 }}></View>
             <LinkItem

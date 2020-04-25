@@ -31,6 +31,11 @@ export class HistoryScreen extends React.Component<Props, States> {
     this.state = {
       files: [],
     };
+    this._unsubscribe = this.props.navigation.addListener("focus", () => {
+      StatusBar.setBackgroundColor("#00000000");
+      StatusBar.setTranslucent(true);
+      StatusBar.setBarStyle("dark-content");
+    });
     this.readFiles = this.readFiles.bind(this);
     this.goSetting = this.goSetting.bind(this);
   }
@@ -67,6 +72,7 @@ export class HistoryScreen extends React.Component<Props, States> {
             let msg = result.data;
             if (msg === "上传成功") {
               await this.deleteData(file.path);
+              this.readFiles();
             }
             Alert.alert("提示", result.data);
           } catch (e) {
@@ -134,10 +140,6 @@ export class HistoryScreen extends React.Component<Props, States> {
   }
 
   componentDidMount() {
-    this._unsubscribe = this.props.navigation.addListener("focus", () => {
-      StatusBar.setBackgroundColor("#00000000");
-      StatusBar.setTranslucent(true);
-    });
     this.readFiles();
   }
   componentWillUnmount() {
