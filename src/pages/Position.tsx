@@ -25,7 +25,6 @@ import {
   ThreeAxisMeasurement,
 } from "expo-sensors";
 import { Badge } from "react-native-elements";
-import { useFocusEffect } from "@react-navigation/native";
 import Feather from "react-native-vector-icons/Feather";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
@@ -82,7 +81,7 @@ export default class PositionScreen extends Component<Props, States> {
     this.g = null;
     this.m = null;
     this.created = false; //是否首次获取位置
-    this.locationListener = new LocationListener("app1", async (e) => {
+    this.locationListener = new LocationListener(async (e) => {
       if (!this.created) {
         let p1 = new Promise(async (r, j) => {
           let a_is = await Accelerometer.isAvailableAsync();

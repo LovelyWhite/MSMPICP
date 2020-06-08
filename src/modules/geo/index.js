@@ -2,9 +2,8 @@ import { NativeModules, NativeEventEmitter } from "react-native";
 
 const { GEO } = NativeModules;
 export class LocationListener {
-  constructor(name, onLocationChanged) {
+  constructor(onLocationChanged) {
     this.onLocationChanged = onLocationChanged;
-    this.name = name;
     this.eventListener = null;
   }
 }
@@ -24,7 +23,6 @@ export async function startListen(
   try {
     let res = await GEO.startListen(
       provider,
-      locationListener.name,
       minTime,
       minDistance
     );
@@ -37,7 +35,7 @@ export async function startListen(
 }
 export async function stopListen(locationListener) {
   try {
-    let res = await GEO.stopListen(locationListener.name);
+    let res = await GEO.stopListen();
     locationListener.eventListener.remove();
     return Promise.resolve(res);
   } catch (e) {
@@ -45,10 +43,4 @@ export async function stopListen(locationListener) {
   }
 
   return;
-}
-export function isListening() {
-  return GEO.isListening();
-}
-export function getAllProviders() {
-  return GEO.getAllProviders();
 }

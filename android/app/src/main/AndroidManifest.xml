@@ -41,8 +41,7 @@
       </activity>
       <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" />
         <service
-            android:name="MyNavigationService"
-            android:foregroundServiceType="location">
+            android:name=".geo.MyNavigationService">
         </service>
     </application>
 

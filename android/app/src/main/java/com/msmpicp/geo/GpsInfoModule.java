@@ -1,38 +1,28 @@
 package com.msmpicp.geo;
 
 import android.annotation.SuppressLint;
+import android.content.ComponentName;
 import android.content.Context;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
-import android.os.Bundle;
-
-import com.facebook.react.bridge.Arguments;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.IBinder;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.bridge.WritableArray;
-import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
-
-import org.json.JSONObject;
-
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.annotation.Nullable;
 
 
-public class GpsInfoModule extends ReactContextBaseJavaModule {
-    Map<String,LocationListener> locationListeneries = new HashMap<>();
+public class GpsInfoModule extends ReactContextBaseJavaModule implements ServiceConnection {
+
     private final ReactApplicationContext reactContext;
-    LocationManager locationManager;
+
     public GpsInfoModule(ReactApplicationContext reactContext) {
         super(reactContext);
         this.reactContext = reactContext;
-        locationManager = (LocationManager) reactContext.getSystemService(Context.LOCATION_SERVICE);
+
     }
 
     @Nullable
@@ -41,92 +31,20 @@ public class GpsInfoModule extends ReactContextBaseJavaModule {
         return "GEO";
     }
 
-    @ReactMethod
-    public void getAllProviders(Promise promise) {
-        WritableArray array = Arguments.fromList(locationManager.getAllProviders());
-        promise.resolve(array);
-    }
-    @SuppressLint("MissingPermission")
-
-    @ReactMethod
-    public void isListening(Promise promise){
-        int size =locationListeneries.size();
-        if(size== 0){
-            promise.resolve(false);
-        }
-        else{
-            promise.resolve(size);
-        }
-    }
     @SuppressLint("MissingPermission")
     @ReactMethod
-    public void startListen(String provider,String name, Double minTime, Float minDistance, Promise promise) {
-        try {
-
-            if(locationListeneries.containsKey(name)){
-                promise.reject("-1",name+" is exist");
-            }
-            else
-            {
-                LocationListener temp = new LocationListener() {
-                    @Override
-                    public void onLocationChanged(Location location) {
-                        WritableMap map = Arguments.createMap();
-                        map.putString("provider",location.getProvider());
-                        map.putDouble("latitude",location.getLatitude());
-                        map.putDouble("longitude",location.getLongitude());
-                        map.putDouble("accuracy",location.getAccuracy());
-                        map.putDouble("altitude",location.getAltitude());
-                        map.putDouble("time",location.getTime());
-                        sendEvent(reactContext,"onLocationChanged",map);
-                    }
-
-                    @Override
-                    public void onStatusChanged(String provider, int status, Bundle extras) {
-
-                    }
-
-                    @Override
-                    public void onProviderEnabled(String provider) {
-
-                    }
-
-                    @Override
-                    public void onProviderDisabled(String provider) {
-
-                    }
-                };
-                locationListeneries.put(name,temp);
-                locationManager.requestLocationUpdates(provider,minTime.longValue(),minDistance,temp);
-                JSONObject r = new JSONObject();
-                r.put("name",name);
-                r.put("size",locationListeneries.size());
-                promise.resolve(r.toString());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            promise.reject("-1","1");
-        }
+    public void startListen(String provider,Double minTime, Float minDistance, Promise promise) {
+       Intent intent =  new Intent(reactContext,MyNavigationService.class);
+       intent.putExtra("provider",provider);
+       intent.putExtra("minTime",minTime);
+       intent.putExtra("minDistance",minDistance);
+       reactContext.bindService(intent,this,Context.BIND_AUTO_CREATE);
+       promise.resolve("success");
     } 
     @ReactMethod
-    public void stopListen(String name,Promise promise){
-        if(locationListeneries.size()==0){
-            promise.reject("-1","no listening");
-        }
-        else
-        {
-            LocationListener temp = locationListeneries.get(name);
-            if(temp == null){
-                promise.reject("-1","no this name");
-            }
-            else
-            {
-                locationManager.removeUpdates(temp);
-                locationListeneries.remove(name);
-                promise.resolve("listen "+name+" is removed");
-            }
-        }
-
+    public void stopListen(Promise promise){
+        reactContext.unbindService(this);
+        promise.resolve("success");
     }
 
     private void sendEvent(ReactContext reactContext,
@@ -137,4 +55,18 @@ public class GpsInfoModule extends ReactContextBaseJavaModule {
                 .emit(eventName, params);
     }
 
+    @Override
+    public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+        MyNavigationService.Binder binder = (MyNavigationService.Binder)iBinder;
+        MyNavigationService myNavigationService = binder.getService();
+        myNavigationService.setCallback(map ->  {
+            System.out.println(map.getString("provider"));
+            sendEvent(reactContext,"onLocationChanged",map);
+        });
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName componentName) {
+
+    }
 }
