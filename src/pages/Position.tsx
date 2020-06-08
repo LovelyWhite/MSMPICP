@@ -7,7 +7,6 @@ import {
   Alert,
   StyleSheet,
   ScrollView,
-  Platform,
 } from "react-native";
 import SplashScreen from "react-native-splash-screen";
 import Slider from "@react-native-community/slider";
