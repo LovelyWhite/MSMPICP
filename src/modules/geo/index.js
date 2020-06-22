@@ -41,6 +41,4 @@ export async function stopListen(locationListener) {
   } catch (e) {
     return Promise.reject(e);
   }
-
-  return;
 }

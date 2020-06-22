@@ -9,10 +9,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class GpsInfoPackage implements ReactPackage {
+public class SensorPackage implements ReactPackage {
     @Override
     public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
-        return Arrays.<NativeModule>asList(new GpsInfoModule(reactContext));
+        return Arrays.<NativeModule>asList(new SensorModule(reactContext));
     }
 
     @Override

@@ -17,6 +17,7 @@ import { TouchableOpacity, ScrollView } from "react-native-gesture-handler";
 import RNFS, { uploadFiles } from "react-native-fs";
 import { getTimeString, pushData } from "../utils";
 import { promise } from "ping";
+import { getSensorInfo } from "../modules/sensor";
 interface Props {
   navigation: any;
 }
@@ -32,12 +33,8 @@ export class HistoryScreen extends React.Component<Props, States> {
       files: [],
     };
     this._unsubscribe = this.props.navigation.addListener("focus", () => {
-      StatusBar.setBackgroundColor("#00000000");
-      StatusBar.setTranslucent(true);
-      StatusBar.setBarStyle("dark-content");
     });
     this.readFiles = this.readFiles.bind(this);
-    this.goSetting = this.goSetting.bind(this);
   }
   readFiles() {
     RNFS.readDir(RNFS.DocumentDirectoryPath + "/storedata")
@@ -58,13 +55,15 @@ export class HistoryScreen extends React.Component<Props, States> {
           try {
             this.Loading.startLoading("正在上传 0%");
             let res = await RNFS.readFile(file.path, "utf8");
+            let sensorInfo = await getSensorInfo();
             let uploadData = {
               uniqueId,
               model,
               brand,
+              sensorInfo,
               data: JSON.parse(res),
             };
-            let result = await pushData("/upload", uploadData, (pe) => {
+            let result = await pushData("/upload", uploadData,0, (pe) => {
               this.Loading.setText(
                 "正在上传 " + (((pe.loaded / pe.total) * 100) | 0) + "%"
               );
@@ -145,9 +144,6 @@ export class HistoryScreen extends React.Component<Props, States> {
   componentWillUnmount() {
     this._unsubscribe && this._unsubscribe();
   }
-  goSetting() {
-    this.props.navigation.navigate("Setting");
-  }
   render() {
     return (
       <View style={{ paddingTop: StatusBar.currentHeight, flex: 1 }}>
@@ -178,11 +174,6 @@ export class HistoryScreen extends React.Component<Props, States> {
               历史记录
             </Text>
             <View style={{ flex: 1 }}></View>
-            <View style={{ marginRight: 15 }}>
-              <TouchableOpacity style={{ padding: 5 }} onPress={this.goSetting}>
-                <AntDesign name="setting" size={17} />
-              </TouchableOpacity>
-            </View>
           </View>
           {this.state.files.length == 0 ? (
             <View

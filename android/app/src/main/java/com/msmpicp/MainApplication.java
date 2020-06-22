@@ -10,6 +10,7 @@ import com.facebook.react.shell.MainReactPackage;
 import com.facebook.soloader.SoLoader;
 import com.msmpicp.generated.BasePackageList;
 import com.msmpicp.geo.GpsInfoPackage;
+import com.msmpicp.sensor.SensorPackage;
 
 import org.unimodules.adapters.react.ReactAdapterPackage;
 import org.unimodules.adapters.react.ModuleRegistryAdapter;
@@ -40,6 +41,7 @@ public class MainApplication extends Application implements ReactApplication {
       List<ReactPackage> packages = new PackageList(this).getPackages();
       packages.add(new ModuleRegistryAdapter(mModuleRegistryProvider));
       packages.add(new GpsInfoPackage());
+      packages.add(new SensorPackage());
       return packages;
     }
 

@@ -60,7 +60,6 @@ public class GpsInfoModule extends ReactContextBaseJavaModule implements Service
         MyNavigationService.Binder binder = (MyNavigationService.Binder)iBinder;
         MyNavigationService myNavigationService = binder.getService();
         myNavigationService.setCallback(map ->  {
-            System.out.println(map.getString("provider"));
             sendEvent(reactContext,"onLocationChanged",map);
         });
     }

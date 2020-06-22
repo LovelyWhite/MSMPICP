@@ -58,12 +58,14 @@ export const URL = "https://suxitech.work";
 export function pushData(
   url: string,
   values: any,
+  timeout:number,
   onUploadProgress?: (progressEvent: any) => void
 ) {
   return axios.post(URL + url, values, {
     headers: {
       "Content-Type": "application/json",
     },
+    timeout:timeout,
     onUploadProgress: onUploadProgress,
   });
 }
