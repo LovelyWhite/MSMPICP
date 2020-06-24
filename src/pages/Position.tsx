@@ -695,7 +695,7 @@ export default class PositionScreen extends Component<Props, States> {
                   data={this.state.data.slice(-10).map(({ barometerData }) => {
                     if (barometerData) {
                       return {
-                        y: barometerData.pressure / 7
+                        y: barometerData.pressure / 10
                       }
                     }
                     else {
