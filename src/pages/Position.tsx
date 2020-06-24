@@ -8,19 +8,21 @@ import {
   StyleSheet,
   ScrollView,
   BackHandler,
+  Dimensions,
 } from "react-native";
 import SplashScreen from "react-native-splash-screen";
+import { VictoryChart, VictoryTheme, VictoryLine, VictoryZoomContainer, VictoryAxis, VictoryLabel, VictoryTooltip } from "victory-native";
 import Slider from "@react-native-community/slider";
 import * as Permissions from "expo-permissions";
 import Loading from "../components/loading";
+import { Table, Row, Rows} from 'react-native-table-component';
 import RNFS from "react-native-fs";
-
 import DeviceInfo from "react-native-device-info";
 import {
-  Accelerometer,
-  Barometer,
-  Gyroscope,
-  Magnetometer,
+  // Accelerometer,
+  // Barometer,
+  // Gyroscope,
+  // Magnetometer,
   BarometerMeasurement,
   ThreeAxisMeasurement,
 } from "expo-sensors";
@@ -46,18 +48,9 @@ interface Props {
   navigation: any;
   route: any;
 }
-
-interface ContextData {
-  timeString: string;
-  location: LocationData;
-  accelerometerData: ThreeAxisMeasurement | null;
-  barometerData: BarometerMeasurement | null;
-  gyroscopeData: ThreeAxisMeasurement | null;
-  magnetometerData: ThreeAxisMeasurement | null;
-}
 interface States {
   timeInterval: number;
-  data: ContextData[];
+  data: LocationData[];
   running: boolean;
   realTimeUpload: boolean;
 }
@@ -65,7 +58,6 @@ interface States {
 export default class PositionScreen extends Component<Props, States> {
   created: boolean;
   ScrollView: ScrollView;
-  data: ContextData[]; //缓存数据
   _unsubscribe: any;
   model: string;
   uniqueId: string;
@@ -88,64 +80,58 @@ export default class PositionScreen extends Component<Props, States> {
 
     this.locationListener = new LocationListener(async (e) => {
       if (!this.created) {
-        let p1 = new Promise(async (r, j) => {
-          let a_is = await Accelerometer.isAvailableAsync();
-          if (a_is) {
-            Accelerometer.addListener((accelerometerData) => {
-              this.a = accelerometerData;
-              r("ok");
-            });
-          } else {
-            r("ok");
-          }
-        });
-        let p2 = new Promise(async (r, j) => {
-          let b_is = await Barometer.isAvailableAsync();
-          if (b_is) {
-            Barometer.addListener((barometerData) => {
-              this.b = barometerData;
-              r("ok");
-            });
-          } else {
-            r("ok");
-          }
-        });
+        // let p1 = new Promise(async (r, j) => {
+        //   let a_is = await Accelerometer.isAvailableAsync();
+        //   if (a_is) {
+        //     Accelerometer.addListener((accelerometerData) => {
+        //       this.a = accelerometerData;
+        //       r("ok");
+        //     });
+        //   } else {
+        //     r("ok");
+        //   }
+        // });
+        // let p2 = new Promise(async (r, j) => {
+        //   let b_is = await Barometer.isAvailableAsync();
+        //   if (b_is) {
+        //     Barometer.addListener((barometerData) => {
+        //       this.b = barometerData;
+        //       r("ok");
+        //     });
+        //   } else {
+        //     r("ok");
+        //   }
+        // });
 
-        let p3 = new Promise(async (r, j) => {
-          let g_is = await Gyroscope.isAvailableAsync();
-          if (g_is) {
-            Gyroscope.addListener((gyroscopeData) => {
-              this.g = gyroscopeData;
-              r("ok");
-            });
-          } else {
-            r("ok");
-          }
-        });
+        // let p3 = new Promise(async (r, j) => {
+        //   let g_is = await Gyroscope.isAvailableAsync();
+        //   if (g_is) {
+        //     Gyroscope.addListener((gyroscopeData) => {
+        //       this.g = gyroscopeData;
+        //       r("ok");
+        //     });
+        //   } else {
+        //     r("ok");
+        //   }
+        // });
 
-        let p4 = new Promise(async (r, j) => {
-          let m_is = await Magnetometer.isAvailableAsync();
-          if (m_is) {
-            Magnetometer.addListener((magnetometerData) => {
-              this.m = magnetometerData;
-              r("ok");
-            });
-          } else {
-            r("ok");
-          }
-        });
+        // let p4 = new Promise(async (r, j) => {
+        //   let m_is = await Magnetometer.isAvailableAsync();
+        //   if (m_is) {
+        //     Magnetometer.addListener((magnetometerData) => {
+        //       this.m = magnetometerData;
+        //       r("ok");
+        //     });
+        //   } else {
+        //     r("ok");
+        //   }
+        // });
         this.created = true;
-        await Promise.all([p1, p2, p3, p4]);
+        // await Promise.all([p1, p2, p3, p4]);
         this.Loading.stopLoading();
       }
-      let dItem: ContextData = {
-        timeString: getTimeString(e.time),
-        location: e,
-        accelerometerData: this.a,
-        barometerData: this.b,
-        gyroscopeData: this.g,
-        magnetometerData: this.m,
-      };
+      let dItem:LocationData = e;
+      dItem.timeString = getTimeString(e.location.time);
       let uploadData = {
         uniqueId: this.uniqueId,
         model: this.model,
@@ -156,8 +142,11 @@ export default class PositionScreen extends Component<Props, States> {
       if (this.state.realTimeUpload) {
         pushData("/upload", uploadData, 1000);
       }
-      let c_vect = [dItem];
-      c_vect = c_vect.concat(this.state.data);
+      // let c_vect = [dItem];
+      // c_vect = c_vect.concat(this.state.data);
+      let c_vect = this.state.data;
+      // c_vect = c_vect.concat(this.state.data);
+      c_vect.push(dItem);
       this.setState({
         data: c_vect,
       });
@@ -184,7 +173,7 @@ export default class PositionScreen extends Component<Props, States> {
       }
     });
 
-    this._setSensorInterval = this._setSensorInterval.bind(this);
+    // this._setSensorInterval = this._setSensorInterval.bind(this);
     this.start = this.start.bind(this);
     this.stop = this.stop.bind(this);
     this.save = this.save.bind(this);
@@ -198,12 +187,12 @@ export default class PositionScreen extends Component<Props, States> {
   m: ThreeAxisMeasurement;
   Loading: Loading;
   locationListener: LocationListener;
-  _setSensorInterval(timeInterval: number) {
-    Accelerometer.setUpdateInterval(timeInterval * 1000);
-    Barometer.setUpdateInterval(timeInterval * 1000);
-    Gyroscope.setUpdateInterval(timeInterval * 1000);
-    Magnetometer.setUpdateInterval(timeInterval * 1000);
-  }
+  // _setSensorInterval(timeInterval: number) {
+  //   Accelerometer.setUpdateInterval(timeInterval * 1000);
+  //   Barometer.setUpdateInterval(timeInterval * 1000);
+  //   Gyroscope.setUpdateInterval(timeInterval * 1000);
+  //   Magnetometer.setUpdateInterval(timeInterval * 1000);
+  // }
   async start() {
     let enabled = await DeviceInfo.isLocationEnabled();
     if (!enabled) {
@@ -219,7 +208,7 @@ export default class PositionScreen extends Component<Props, States> {
           this.locationListener
         )
           .then(() => {
-            this._setSensorInterval(this.state.timeInterval);
+            // this._setSensorInterval(this.state.timeInterval);
             this.setState({
               running: true,
             });
@@ -239,10 +228,10 @@ export default class PositionScreen extends Component<Props, States> {
         this.setState({
           running: false,
         });
-        Accelerometer.removeAllListeners();
-        Barometer.removeAllListeners();
-        Gyroscope.removeAllListeners();
-        Magnetometer.removeAllListeners();
+        // Accelerometer.removeAllListeners();
+        // Barometer.removeAllListeners();
+        // Gyroscope.removeAllListeners();
+        // Magnetometer.removeAllListeners();
         this.a = null;
         this.b = null;
         this.g = null;
@@ -334,13 +323,14 @@ export default class PositionScreen extends Component<Props, States> {
     BackHandler.addEventListener('hardwareBackPress', this.onBackAndroid);
   }
   goSetting() {
-    if (this.state.running) {
+    if (!this.state.running) {
       this.props.navigation.navigate("Setting");
     } else {
       Alert.alert("提示", "请先停止数据收集");
     }
   }
   onBackAndroid() {
+    console.log(this.props.route)
     if (this.props.route.name == "Position") {
       Alert.alert("退出", "确认退出程序？", [{
         text: "ok",
@@ -374,28 +364,29 @@ export default class PositionScreen extends Component<Props, States> {
               height: 50,
               alignItems: "center",
               flexDirection: "row",
+              elevation: 1
             }}
           >
-            <Text style={{ fontSize: 20, color: "#000", marginLeft: 20 }}>
-              控制台
+            <Text style={{ fontSize: 20, color: "#000", marginLeft: 10 }}>
+              信息采集系统
             </Text>
-            {
-              this.state.realTimeUpload ? <Text style={{ fontSize: 9, position: "relative", left: 8, top: 6 }}>实时上传</Text> :
-                <Text style={{ fontSize: 9, position: "relative", left: 8, top: 6 }}>存储上传</Text>
-            }
             {this.state.data.length > 0 && (
               <Badge
                 textStyle={{ fontSize: 11 }}
-                containerStyle={{ position: "relative", top: -4 }}
+                containerStyle={{ position: "relative", top: -4,zIndex:-1 }}
                 value={this.state.data.length}
                 status="error"
               />
             )}
+            {
+              this.state.realTimeUpload ? <Text style={{ fontSize: 9, position: "relative", left: 8, top: 6 }}>实时上传</Text> :
+                <Text style={{ fontSize: 9, position: "relative", left: 8, top: 6 }}>存储上传</Text>
+            }
             <Text style={{ fontSize: 10, marginLeft: 10 }}></Text>
             <View style={{ flex: 1 }}></View>
             {/* <View style={{ marginRight: 5 }}>
               <TouchableOpacity style={{ padding: 5 }} onPress={this.clear}>
-                <MaterialIcons name="clear" size={20} color="red" />
+                <MaterialIcons name="clear" size={20} />
               </TouchableOpacity>
             </View> */}
             <View style={{ marginRight: 5 }}>
@@ -412,287 +403,354 @@ export default class PositionScreen extends Component<Props, States> {
               <TouchableOpacity
                 style={{ padding: 5 }}
                 onPress={() => {
-                  this.props.navigation.navigate("History");
+                  if (!this.state.running) {
+                    this.props.navigation.navigate("History");
+                  } else {
+                    Alert.alert("提示", "请先停止数据收集");
+                  }
                 }}>
                 <MaterialCommunityIcons name="history" size={20} />
               </TouchableOpacity>
             </View>
           </View>
-          {this.state.data.length == 0 ? (
-            <View
-              style={{
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center",
-                flexDirection: "row",
-              }}
-            >
-              <Text>请点击</Text>
-              <Entypo name="controller-play" size={23} color="green" />
-              <Text>启动数据收集</Text>
-            </View>
-          ) :
-            (
-              <ScrollView
-                style={{ flex: 1 }}
-                ref={(ref) => (this.ScrollView = ref)}
+          <View style={{ flex: 1, paddingTop: 10}}>
+            <View style={{ flexDirection: "row",
+                  marginHorizontal:10, }}>
+              <View
+                style={{
+                  flex: 1,
+                  paddingHorizontal: 2,
+                }}
               >
-                {this.state.data.slice(0, 5).map((dataValue, index) => {
-                  return (
-                    <View
-                      key={index}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
+                  <View style={styles.icon}>
+                    <Feather name="navigation" size={16} color="#409EFF" />
+                    <Text
                       style={{
-                        paddingHorizontal: 20,
-                        paddingTop: 5,
+                        fontSize: 8,
+                        textAlign: "center",
+                        color: "#409EFF",
                       }}
                     >
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          opacity: 0.8,
-                        }}
-                      >
-                        <Feather name="clock" size={10} color="#000" />
-                        <Text
-                          style={{
-                            fontSize: 10,
-                            paddingHorizontal: 5,
-                            fontWeight: "700",
-                            color: "#000",
-                          }}
-                        >
-                          {dataValue.timeString}
+                      坐标(lng,lat)
                         </Text>
-                      </View>
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                        }}
-                      >
-                        <View style={styles.icon}>
-                          <Feather name="navigation" size={16} color="#409EFF" />
-                          <Text
-                            style={{
-                              fontSize: 8,
-                              textAlign: "center",
-                              color: "#409EFF",
-                            }}
-                          >
-                            坐标(lng,lat)
-                        </Text>
-                        </View>
-                        <View style={styles.dataContainer}>
-                          <Text style={styles.data}>
-                            {dataValue.location.longitude}
-                          </Text>
-                          <Text style={styles.data}>
-                            {dataValue.location.latitude}
-                          </Text>
-                          <Text
-                            style={{
-                              fontSize: 8,
-                              opacity: 0.7,
-                              alignSelf: "flex-end",
-                            }}
-                          >
-                            精度:{dataValue.location.accuracy}
-                          </Text>
-                        </View>
-                      </View>
+                  </View>
+                  <View style={styles.dataContainer}>
+                    <Text style={styles.data}>
+                      {this.state.data[this.state.data.length - 1]?.location.longitude.toFixed(2)}
+                    </Text>
+                    <Text style={styles.data}>
+                      {this.state.data[this.state.data.length - 1]?.location.latitude.toFixed(2)}
+                    </Text>
+                  </View>
+                </View>
 
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                        }}
-                      >
-                        <View style={styles.icon}>
-                          <MaterialCommunityIcons
-                            name="alpha"
-                            size={16}
-                            color="#F56C6C"
-                          />
-                          <Text
-                            style={{
-                              fontSize: 8,
-                              textAlign: "center",
-                              color: "#F56C6C",
-                            }}
-                          >
-                            加速度(x,y,z)
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
+                  <View style={styles.icon}>
+                    <MaterialCommunityIcons
+                      name="alpha"
+                      size={16}
+                      color="#F56C6C"
+                    />
+                    <Text
+                      style={{
+                        fontSize: 8,
+                        textAlign: "center",
+                        color: "#F56C6C",
+                      }}
+                    >
+                      加速度(x,y,z)
                         </Text>
-                        </View>
+                  </View>
 
-                        <View style={styles.dataContainer}>
-                          {dataValue.accelerometerData != null ? (
-                            <>
-                              <Text style={styles.data}>
-                                {dataValue.accelerometerData.x}
-                              </Text>
-                              <Text style={styles.data}>
-                                {dataValue.accelerometerData.y}
-                              </Text>
-                              <Text style={styles.data}>
-                                {dataValue.accelerometerData.z}
-                              </Text>
-                            </>
-                          ) : (
-                              <FontAwesome name="ban" />
-                            )}
-                        </View>
-                      </View>
-                      <View
+                  <View style={styles.dataContainer}>
+                    {this.state.data[this.state.data.length - 1]?.accelerometerData != null ? (
+                      <>
+                        <Text style={styles.data}>
+                          {this.state.data[this.state.data.length - 1]?.accelerometerData.x.toFixed(2)}
+                        </Text>
+                        <Text style={styles.data}>
+                          {this.state.data[this.state.data.length - 1]?.accelerometerData.y.toFixed(2)}
+                        </Text>
+                        <Text style={styles.data}>
+                          {this.state.data[this.state.data.length - 1]?.accelerometerData.z.toFixed(2)}
+                        </Text>
+                      </>
+                    ) : (
+                        <FontAwesome name="ban" />
+                      )}
+                  </View>
+                </View>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
+                  <View style={styles.icon}>
+                    <MaterialCommunityIcons
+                      name="axis-arrow"
+                      size={16}
+                      color="#67C23A"
+                    />
+                    <Text
+                      style={{
+                        fontSize: 8,
+                        textAlign: "center",
+                        color: "#67C23A",
+                      }}
+                    >
+                      陀螺仪(x,y,z)
+                        </Text>
+                  </View>
+                  <View style={styles.dataContainer}>
+                    {this.state.data[this.state.data.length - 1]?.gyroscopeData != null ? (
+                      <>
+                        <Text style={styles.data}>
+                          {this.state.data[this.state.data.length - 1]?.gyroscopeData.x.toFixed(2)}
+                        </Text>
+                        <Text style={styles.data}>
+                          {this.state.data[this.state.data.length - 1]?.gyroscopeData.y.toFixed(2)}
+                        </Text>
+                        <Text style={styles.data}>
+                          {this.state.data[this.state.data.length - 1]?.gyroscopeData.z.toFixed(2)}
+                        </Text>
+                      </>
+                    ) : (
+                        <FontAwesome name="ban" />
+                      )}
+                  </View>
+                </View>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
+                  <View style={styles.icon}>
+                    <FontAwesome name="magnet" size={15} color="#606266" />
+                    <Text
+                      style={{
+                        fontSize: 8,
+                        textAlign: "center",
+                        color: "#606266",
+                      }}
+                    >
+                      磁力计(x,y,z)
+                        </Text>
+                  </View>
+                  <View style={styles.dataContainer}>
+                    {this.state.data[this.state.data.length - 1]?.magnetometerData != null ? (
+                      <>
+                        <Text style={styles.data}>
+                          {this.state.data[this.state.data.length - 1]?.magnetometerData.x.toFixed(2)}
+                        </Text>
+                        <Text style={styles.data}>
+                          {this.state.data[this.state.data.length - 1]?.magnetometerData.y.toFixed(2)}
+                        </Text>
+                        <Text style={styles.data}>
+                          {this.state.data[this.state.data.length - 1]?.magnetometerData.z.toFixed(2)}
+                        </Text>
+                      </>
+                    ) : (
+                        <FontAwesome name="ban" />
+                      )}
+                  </View>
+                </View>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
+                  <View style={styles.icon}>
+                    <MaterialCommunityIcons
+                      name="weather-cloudy"
+                      size={15}
+                      color="#ffa83b"
+                    />
+                    <Text
+                      style={{
+                        fontSize: 8,
+                        textAlign: "center",
+                        color: "#ffa83b",
+                      }}
+                    >
+                      气压计
+                        </Text>
+                  </View>
+                  <View style={styles.dataContainer}>
+                    {this.state.data[this.state.data.length - 1]?.barometerData != null ? (
+                      <Text style={styles.data}>
+                        {this.state.data[this.state.data.length - 1]?.barometerData.pressure.toFixed(2)}
+                      </Text>
+                    ) : (
+                        <FontAwesome name="ban" />
+                      )}
+                  </View>
+                </View>
+                <View style={{ marginTop: 10 }}>
+                  <Text style={{ fontSize: 12 }}>卫星时间</Text>
+                  <Text style={{ fontSize: 12, borderWidth: 0.33333, marginTop: 5,lineHeight:30,textAlign:"center", backgroundColor: "#ddd", borderColor: "#aaa", height: 30, fontWeight: "700" }}>{this.state.data[this.state.data.length - 1]?.timeString}</Text>
+                </View>
+                <View style={{ flex: 1, justifyContent: "center" }}>
+                  {!this.state.running ? (
+                    <TouchableOpacity
+                      style={{
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                      onPress={this.start}
+                    >
+                      <Entypo name="controller-play" size={34} color="green" />
+                    </TouchableOpacity>
+                  ) : (
+                      <TouchableOpacity
                         style={{
-                          flexDirection: "row",
+                          justifyContent: "center",
                           alignItems: "center",
                         }}
+                        onPress={this.stop}
                       >
-                        <View style={styles.icon}>
-                          <MaterialCommunityIcons
-                            name="axis-arrow"
-                            size={16}
-                            color="#67C23A"
-                          />
-                          <Text
-                            style={{
-                              fontSize: 8,
-                              textAlign: "center",
-                              color: "#67C23A",
-                            }}
-                          >
-                            陀螺仪(x,y,z)
-                        </Text>
-                        </View>
-                        <View style={styles.dataContainer}>
-                          {dataValue.gyroscopeData != null ? (
-                            <>
-                              <Text style={styles.data}>
-                                {dataValue.gyroscopeData.x}
-                              </Text>
-                              <Text style={styles.data}>
-                                {dataValue.gyroscopeData.y}
-                              </Text>
-                              <Text style={styles.data}>
-                                {dataValue.gyroscopeData.z}
-                              </Text>
-                            </>
-                          ) : (
-                              <FontAwesome name="ban" />
-                            )}
-                        </View>
-                      </View>
+                        <Entypo name="controller-paus" size={34} color="#d75c49" />
+                      </TouchableOpacity>
+                    )}
+                </View>
+              </View>
 
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                        }}
-                      >
-                        <View style={styles.icon}>
-                          <FontAwesome name="magnet" size={15} color="#606266" />
-                          <Text
-                            style={{
-                              fontSize: 8,
-                              textAlign: "center",
-                              color: "#606266",
-                            }}
-                          >
-                            磁力计(x,y,z)
-                        </Text>
-                        </View>
-                        <View style={styles.dataContainer}>
-                          {dataValue.magnetometerData != null ? (
-                            <>
-                              <Text style={styles.data}>
-                                {dataValue.magnetometerData.x}
-                              </Text>
-                              <Text style={styles.data}>
-                                {dataValue.magnetometerData.y}
-                              </Text>
-                              <Text style={styles.data}>
-                                {dataValue.magnetometerData.z}
-                              </Text>
-                            </>
-                          ) : (
-                              <FontAwesome name="ban" />
-                            )}
-                        </View>
-                      </View>
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                        }}
-                      >
-                        <View style={styles.icon}>
-                          <MaterialCommunityIcons
-                            name="weather-cloudy"
-                            size={15}
-                            color="#ffa83b"
-                          />
-                          <Text
-                            style={{
-                              fontSize: 8,
-                              textAlign: "center",
-                              color: "#ffa83b",
-                            }}
-                          >
-                            气压计
-                        </Text>
-                        </View>
-                        <View style={styles.dataContainer}>
-                          {dataValue.barometerData != null ? (
-                            <Text style={styles.data}>
-                              {dataValue.barometerData.pressure}
-                            </Text>
-                          ) : (
-                              <FontAwesome name="ban" />
-                            )}
-                        </View>
-                      </View>
-                    </View>
-                  );
-                })}
+              <VictoryChart
+                maxDomain={{ y: 150 }}
+                minDomain={{ y: -150 }}
+                padding={{ right: 10, left: 40, top: 6, bottom: 20 }}
+                width={260}
+                height={350}
+                theme={VictoryTheme.material}
+                style={{
+                  background: {}
+                }}
+                containerComponent={<VictoryZoomContainer zoomDomain={{ y: [-150, 150] }} />}
+              >
+                <VictoryLabel style={{ fill: "#aaa" }} x={130} y={20}
+                  text="历史动态曲线(相对)"
+                />
+                <VictoryAxis crossAxis
+                  theme={VictoryTheme.material}
+                  offsetY={20}
+                  tickValues={[1, 2, 3, 4, 5, 6, 7, 8, 9]}
+                  style={{tickLabels: {fontSize: 10, padding: 2}}}
+                  standalone={false}
+                />
+                <VictoryAxis dependentAxis crossAxis
+                tickCount={20}
+                  style={{tickLabels: {fontSize: 10, padding: 2}}}
+                  standalone={false}
+                />
+                <VictoryLine
+                  interpolation="natural"
+                  style={{ data: { stroke: "#606266" } }}
+                  data={this.state.data.slice(-10).map(({ magnetometerData }, i) => {
+                    if (magnetometerData) {
+                      return {
+                        // x: i.toFixed(0),
+                        y: (magnetometerData.x)
+                      }
+                    }
+                    else {
+                      return {
+                        // x: i,
+                        y: 0
+                      }
+                    }
+                  })} y="y"
+                />
+                <VictoryLine
+                  interpolation="natural"
+                  style={{ data: { stroke: "#F56C6C" } }}
+                  data={this.state.data.slice(-10).map(({ accelerometerData }, i) => {
+                    if (accelerometerData) {
+                      return {
+                        y: accelerometerData.x * 10
+                      }
+                    }
+                    else {
+                      return {
+                        y: 0
+                      }
+                    }
+                  })} y="y"
+                />
+                <VictoryLine
+                  interpolation="natural"
+                  style={{ data: { stroke: "#ffa83b" } }}
+                  data={this.state.data.slice(-10).map(({ barometerData }) => {
+                    if (barometerData) {
+                      return {
+                        y: barometerData.pressure / 7
+                      }
+                    }
+                    else {
+                      return {
+                        y: 0
+                      }
+                    }
+                  })} y="y"
+                />
+                <VictoryLine
+                  interpolation="natural"
+                  style={{ data: { stroke: "#67C23A" } }}
+                  data={this.state.data.slice(-10).map(({ gyroscopeData }) => {
+                    if (gyroscopeData) {
+                      return {
+                        y: (gyroscopeData.x) * 100
+                      }
+                    }
+                    else {
+                      return {
+                        y: 0
+                      }
+                    }
+                  })} y="y"
+                />
+              </VictoryChart>
+            </View>
+            <View style={{ margin: 5, flex: 1,backgroundColor:'#f1f8ff' }}>
+              <ScrollView>
+                <Table borderStyle={{borderWidth: 2, borderColor: '#c8e1ff'}}>
+                  <Row style={{ height: 30, backgroundColor: '#f1f8ff' }} textStyle={{textAlign: 'center',fontSize:12}} data={['时间', '坐标', '加速度', '磁力','气压']}></Row>
+                  <Rows data={this.state.data.slice(-10).map(e=>{
+                    return [
+                      e.timeString,
+                      e.location.longitude+"\n"+e?.location.latitude,
+                      e.accelerometerData?.x+"\n"+e.accelerometerData?.y+"\n"+e.accelerometerData?.z,
+                      e.magnetometerData?.x+"\n"+e.magnetometerData?.y+"\n"+e.magnetometerData?.z,
+                      e.barometerData?.pressure
+                    ]
+                  })} textStyle={{textAlign: 'center',fontSize:8}}/>
+                </Table>
               </ScrollView>
-            )
-          }
+            </View>
+          </View>
           <View
             style={{
               paddingHorizontal: 10,
               alignItems: "center",
+              backgroundColor:"#fff",
               justifyContent: "space-around",
               flexDirection: "row",
               height: 50,
             }}
           >
-            {!this.state.running ? (
-              <TouchableOpacity
-                style={{
-                  width: 30,
-                  height: 30,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-                onPress={this.start}
-              >
-                <Entypo name="controller-play" size={23} color="green" />
-              </TouchableOpacity>
-            ) : (
-                <TouchableOpacity
-                  style={{
-                    width: 30,
-                    height: 30,
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                  onPress={this.stop}
-                >
-                  <Entypo name="controller-paus" size={18} color="red" />
-                </TouchableOpacity>
-              )}
-
+            <Text>采集间隔</Text>
             <Slider
               style={{ flex: 1 }}
               minimumValue={1}

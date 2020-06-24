@@ -39,6 +39,7 @@ export default class Loading extends React.Component<Props, States> {
           <View
             style={{
               position: "absolute",
+              elevation:1,
               left: 0,
               top: 0,
               right: 0,
