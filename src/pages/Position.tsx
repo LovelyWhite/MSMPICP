@@ -730,10 +730,10 @@ export default class PositionScreen extends Component<Props, States> {
                   <Rows data={this.state.data.slice(-10).map(e=>{
                     return [
                       e.timeString,
-                      e.location.longitude+"\n"+e?.location.latitude,
-                      e.accelerometerData?.x+"\n"+e.accelerometerData?.y+"\n"+e.accelerometerData?.z,
-                      e.magnetometerData?.x+"\n"+e.magnetometerData?.y+"\n"+e.magnetometerData?.z,
-                      e.barometerData?.pressure
+                      e.location.longitude.toFixed(2)+"\n"+e?.location.latitude.toFixed(2),
+                      e.accelerometerData?.x.toFixed(2)+"\n"+e.accelerometerData?.y.toFixed(2)+"\n"+e.accelerometerData?.z.toFixed(2),
+                      e.magnetometerData?.x.toFixed(2)+"\n"+e.magnetometerData?.y.toFixed(2)+"\n"+e.magnetometerData?.z.toFixed(2),
+                      e.barometerData?.pressure.toFixed(2)
                     ]
                   })} textStyle={{textAlign: 'center',fontSize:8}}/>
                 </Table>
