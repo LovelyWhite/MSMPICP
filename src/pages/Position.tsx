@@ -11,20 +11,26 @@ import {
   Dimensions,
 } from "react-native";
 import SplashScreen from "react-native-splash-screen";
-import { VictoryChart, VictoryTheme, VictoryLine, VictoryZoomContainer, VictoryAxis, VictoryLabel, VictoryTooltip } from "victory-native";
+import {
+  VictoryChart,
+  VictoryTheme,
+  VictoryLine,
+  VictoryZoomContainer,
+  VictoryAxis,
+  VictoryLabel,
+  VictoryTooltip,
+} from "victory-native";
 import Slider from "@react-native-community/slider";
 import * as Permissions from "expo-permissions";
 import Loading from "../components/loading";
-import { Table, Row, Rows} from 'react-native-table-component';
+import { Table, Row, Rows } from "react-native-table-component";
 import RNFS from "react-native-fs";
 import DeviceInfo from "react-native-device-info";
 import {
-  // Accelerometer,
-  // Barometer,
-  // Gyroscope,
-  // Magnetometer,
-  BarometerMeasurement,
-  ThreeAxisMeasurement,
+  Accelerometer,
+  Barometer,
+  Gyroscope,
+  Magnetometer,
 } from "expo-sensors";
 import { Badge } from "react-native-elements";
 import Feather from "react-native-vector-icons/Feather";
@@ -72,65 +78,14 @@ export default class PositionScreen extends Component<Props, States> {
       running: false,
     };
     this.Loading = null;
-    this.a = null;
-    this.b = null;
-    this.g = null;
-    this.m = null;
     this.created = false; //是否首次获取位置
 
     this.locationListener = new LocationListener(async (e) => {
       if (!this.created) {
-        // let p1 = new Promise(async (r, j) => {
-        //   let a_is = await Accelerometer.isAvailableAsync();
-        //   if (a_is) {
-        //     Accelerometer.addListener((accelerometerData) => {
-        //       this.a = accelerometerData;
-        //       r("ok");
-        //     });
-        //   } else {
-        //     r("ok");
-        //   }
-        // });
-        // let p2 = new Promise(async (r, j) => {
-        //   let b_is = await Barometer.isAvailableAsync();
-        //   if (b_is) {
-        //     Barometer.addListener((barometerData) => {
-        //       this.b = barometerData;
-        //       r("ok");
-        //     });
-        //   } else {
-        //     r("ok");
-        //   }
-        // });
-
-        // let p3 = new Promise(async (r, j) => {
-        //   let g_is = await Gyroscope.isAvailableAsync();
-        //   if (g_is) {
-        //     Gyroscope.addListener((gyroscopeData) => {
-        //       this.g = gyroscopeData;
-        //       r("ok");
-        //     });
-        //   } else {
-        //     r("ok");
-        //   }
-        // });
-
-        // let p4 = new Promise(async (r, j) => {
-        //   let m_is = await Magnetometer.isAvailableAsync();
-        //   if (m_is) {
-        //     Magnetometer.addListener((magnetometerData) => {
-        //       this.m = magnetometerData;
-        //       r("ok");
-        //     });
-        //   } else {
-        //     r("ok");
-        //   }
-        // });
         this.created = true;
-        // await Promise.all([p1, p2, p3, p4]);
         this.Loading.stopLoading();
       }
-      let dItem:LocationData = e;
+      let dItem: LocationData = e;
       dItem.timeString = getTimeString(e.location.time);
       let uploadData = {
         uniqueId: this.uniqueId,
@@ -142,10 +97,7 @@ export default class PositionScreen extends Component<Props, States> {
       if (this.state.realTimeUpload) {
         pushData("/upload", uploadData, 1000);
       }
-      // let c_vect = [dItem];
-      // c_vect = c_vect.concat(this.state.data);
       let c_vect = this.state.data;
-      // c_vect = c_vect.concat(this.state.data);
       c_vect.push(dItem);
       this.setState({
         data: c_vect,
@@ -154,26 +106,23 @@ export default class PositionScreen extends Component<Props, States> {
     this._unsubscribe = this.props.navigation.addListener("focus", async () => {
       try {
         let s_v1 = await AsyncStorage.getItem("setting_realtime_upload");
-        let v1 = JSON.parse(s_v1)
+        let v1 = JSON.parse(s_v1);
         if (v1) {
           if (v1.realTimeUpload != this.state.realTimeUpload) {
             this.setState({
               realTimeUpload: v1.realTimeUpload,
               data: [],
-            })
+            });
           }
-        }
-        else {
+        } else {
           this.setState({
-            realTimeUpload: true
-          })
+            realTimeUpload: true,
+          });
         }
       } catch (e) {
         console.log(e);
       }
     });
-
-    // this._setSensorInterval = this._setSensorInterval.bind(this);
     this.start = this.start.bind(this);
     this.stop = this.stop.bind(this);
     this.save = this.save.bind(this);
@@ -181,18 +130,9 @@ export default class PositionScreen extends Component<Props, States> {
     this.goSetting = this.goSetting.bind(this);
     this.onBackAndroid = this.onBackAndroid.bind(this);
   }
-  a: ThreeAxisMeasurement;
-  b: BarometerMeasurement;
-  g: ThreeAxisMeasurement;
-  m: ThreeAxisMeasurement;
   Loading: Loading;
   locationListener: LocationListener;
-  // _setSensorInterval(timeInterval: number) {
-  //   Accelerometer.setUpdateInterval(timeInterval * 1000);
-  //   Barometer.setUpdateInterval(timeInterval * 1000);
-  //   Gyroscope.setUpdateInterval(timeInterval * 1000);
-  //   Magnetometer.setUpdateInterval(timeInterval * 1000);
-  // }
+
   async start() {
     let enabled = await DeviceInfo.isLocationEnabled();
     if (!enabled) {
@@ -204,11 +144,10 @@ export default class PositionScreen extends Component<Props, States> {
         startListen(
           "gps",
           this.state.timeInterval * 1000,
-          10,
+          0,
           this.locationListener
         )
           .then(() => {
-            // this._setSensorInterval(this.state.timeInterval);
             this.setState({
               running: true,
             });
@@ -228,19 +167,11 @@ export default class PositionScreen extends Component<Props, States> {
         this.setState({
           running: false,
         });
-        // Accelerometer.removeAllListeners();
-        // Barometer.removeAllListeners();
-        // Gyroscope.removeAllListeners();
-        // Magnetometer.removeAllListeners();
-        this.a = null;
-        this.b = null;
-        this.g = null;
-        this.m = null;
         this.created = false;
         if (this.state.realTimeUpload) {
           this.setState({
-            data: []
-          })
+            data: [],
+          });
         }
       })
       .catch((e) => {
@@ -255,7 +186,6 @@ export default class PositionScreen extends Component<Props, States> {
     if (!this.state.running) {
       if (this.state.data.length != 0) {
         this.Loading.startLoading("正在保存数据");
-
         //创建文件夹
         RNFS.mkdir(RNFS.DocumentDirectoryPath + "/storedata")
           .then(() => {
@@ -313,14 +243,33 @@ export default class PositionScreen extends Component<Props, States> {
     this.uniqueId = DeviceInfo.getUniqueId();
     this.brand = DeviceInfo.getBrand();
     this.sensorInfo = await getSensorInfo();
+    let gyroscope = await Gyroscope.isAvailableAsync();
+    let accelerometer = await Accelerometer.isAvailableAsync();
+    let barometer = await Barometer.isAvailableAsync();
+    let magnetometer = await Magnetometer.isAvailableAsync();
     SplashScreen.hide();
+    Alert.alert(
+      "传感器状态",
+      "GPS:" +
+        (gyroscope ? "可用" : "不可用") +
+        "\n" +
+        "加速度计:" +
+        (accelerometer ? "可用" : "不可用") +
+        "\n" +
+        "气压计:" +
+        (barometer ? "可用" : "不可用") +
+        "\n" +
+        "磁力计:" +
+        (magnetometer ? "可用" : "不可用") +
+        "\n"
+    );
   }
   componentWillUnmount() {
     this._unsubscribe && this._unsubscribe();
-    BackHandler.removeEventListener('hardwareBackPress', this.onBackAndroid)
+    BackHandler.removeEventListener("hardwareBackPress", this.onBackAndroid);
   }
   componentWillMount() {
-    BackHandler.addEventListener('hardwareBackPress', this.onBackAndroid);
+    BackHandler.addEventListener("hardwareBackPress", this.onBackAndroid);
   }
   goSetting() {
     if (!this.state.running) {
@@ -330,22 +279,22 @@ export default class PositionScreen extends Component<Props, States> {
     }
   }
   onBackAndroid() {
-    console.log(this.props.route)
     if (this.props.route.name == "Position") {
-      Alert.alert("退出", "确认退出程序？", [{
-        text: "ok",
-        onPress: () => {
-          BackHandler.exitApp();
+      Alert.alert("退出", "确认退出程序？", [
+        {
+          text: "ok",
+          onPress: () => {
+            BackHandler.exitApp();
+          },
+          style: "default",
         },
-        style: "default"
-      },
-      {
-        text: "cancel",
-        style: "cancel",
-      }])
+        {
+          text: "cancel",
+          style: "cancel",
+        },
+      ]);
       return true;
-    }
-    else {
+    } else {
       return false;
     }
   }
@@ -357,31 +306,44 @@ export default class PositionScreen extends Component<Props, States> {
             this.Loading = ref;
           }}
         />
-        <StatusBar translucent={true} backgroundColor="#00000000" barStyle="dark-content" />
+        <StatusBar
+          translucent={true}
+          backgroundColor="#00000000"
+          barStyle="dark-content"
+        />
         <SafeAreaView style={{ flex: 1 }}>
           <View
             style={{
               height: 50,
               alignItems: "center",
               flexDirection: "row",
-              elevation: 1
+              elevation: 1,
             }}
           >
-            <Text style={{ fontSize: 20, color: "#000", marginLeft: 10 }}>
-              信息采集系统
+            <Text style={{ fontSize: 15, color: "#000", marginLeft: 10 }} numberOfLines={1}>
+              多源传感器智能终端信息平台
             </Text>
             {this.state.data.length > 0 && (
               <Badge
                 textStyle={{ fontSize: 11 }}
-                containerStyle={{ position: "relative", top: -4,zIndex:-1 }}
+                containerStyle={{ position: "relative", top: -4, zIndex: -1 }}
                 value={this.state.data.length}
                 status="error"
               />
             )}
-            {
-              this.state.realTimeUpload ? <Text style={{ fontSize: 9, position: "relative", left: 8, top: 6 }}>实时上传</Text> :
-                <Text style={{ fontSize: 9, position: "relative", left: 8, top: 6 }}>存储上传</Text>
-            }
+            {this.state.realTimeUpload ? (
+              <Text
+                style={{ fontSize: 9, position: "relative", left: 8, top: 6 }}
+              >
+                实时上传
+              </Text>
+            ) : (
+              <Text
+                style={{ fontSize: 9, position: "relative", left: 8, top: 6 }}
+              >
+                存储上传
+              </Text>
+            )}
             <Text style={{ fontSize: 10, marginLeft: 10 }}></Text>
             <View style={{ flex: 1 }}></View>
             {/* <View style={{ marginRight: 5 }}>
@@ -395,7 +357,10 @@ export default class PositionScreen extends Component<Props, States> {
               </TouchableOpacity>
             </View>
             <View style={{ marginRight: 5 }}>
-              <TouchableOpacity style={{ padding: 5.5 }} onPress={this.goSetting}>
+              <TouchableOpacity
+                style={{ padding: 5.5 }}
+                onPress={this.goSetting}
+              >
                 <AntDesign name="setting" size={19} />
               </TouchableOpacity>
             </View>
@@ -408,14 +373,14 @@ export default class PositionScreen extends Component<Props, States> {
                   } else {
                     Alert.alert("提示", "请先停止数据收集");
                   }
-                }}>
+                }}
+              >
                 <MaterialCommunityIcons name="history" size={20} />
               </TouchableOpacity>
             </View>
           </View>
-          <View style={{ flex: 1, paddingTop: 10}}>
-            <View style={{ flexDirection: "row",
-                  marginHorizontal:10, }}>
+          <View style={{ flex: 1, paddingTop: 10 }}>
+            <View style={{ flexDirection: "row", marginHorizontal: 10 }}>
               <View
                 style={{
                   flex: 1,
@@ -438,14 +403,18 @@ export default class PositionScreen extends Component<Props, States> {
                       }}
                     >
                       坐标(lng,lat)
-                        </Text>
+                    </Text>
                   </View>
                   <View style={styles.dataContainer}>
                     <Text style={styles.data}>
-                      {this.state.data[this.state.data.length - 1]?.location.longitude.toFixed(2)}
+                      {this.state.data[
+                        this.state.data.length - 1
+                      ]?.location.longitude.toFixed(2)}
                     </Text>
                     <Text style={styles.data}>
-                      {this.state.data[this.state.data.length - 1]?.location.latitude.toFixed(2)}
+                      {this.state.data[
+                        this.state.data.length - 1
+                      ]?.location.latitude.toFixed(2)}
                     </Text>
                   </View>
                 </View>
@@ -470,25 +439,32 @@ export default class PositionScreen extends Component<Props, States> {
                       }}
                     >
                       加速度(x,y,z)
-                        </Text>
+                    </Text>
                   </View>
 
                   <View style={styles.dataContainer}>
-                    {this.state.data[this.state.data.length - 1]?.accelerometerData != null ? (
+                    {this.state.data[this.state.data.length - 1]
+                      ?.accelerometerData != null ? (
                       <>
                         <Text style={styles.data}>
-                          {this.state.data[this.state.data.length - 1]?.accelerometerData.x.toFixed(2)}
+                          {this.state.data[
+                            this.state.data.length - 1
+                          ]?.accelerometerData.x.toFixed(2)}
                         </Text>
                         <Text style={styles.data}>
-                          {this.state.data[this.state.data.length - 1]?.accelerometerData.y.toFixed(2)}
+                          {this.state.data[
+                            this.state.data.length - 1
+                          ]?.accelerometerData.y.toFixed(2)}
                         </Text>
                         <Text style={styles.data}>
-                          {this.state.data[this.state.data.length - 1]?.accelerometerData.z.toFixed(2)}
+                          {this.state.data[
+                            this.state.data.length - 1
+                          ]?.accelerometerData.z.toFixed(2)}
                         </Text>
                       </>
                     ) : (
-                        <FontAwesome name="ban" />
-                      )}
+                      <FontAwesome name="ban" />
+                    )}
                   </View>
                 </View>
                 <View
@@ -511,24 +487,31 @@ export default class PositionScreen extends Component<Props, States> {
                       }}
                     >
                       陀螺仪(x,y,z)
-                        </Text>
+                    </Text>
                   </View>
                   <View style={styles.dataContainer}>
-                    {this.state.data[this.state.data.length - 1]?.gyroscopeData != null ? (
+                    {this.state.data[this.state.data.length - 1]
+                      ?.gyroscopeData != null ? (
                       <>
                         <Text style={styles.data}>
-                          {this.state.data[this.state.data.length - 1]?.gyroscopeData.x.toFixed(2)}
+                          {this.state.data[
+                            this.state.data.length - 1
+                          ]?.gyroscopeData.x.toFixed(2)}
                         </Text>
                         <Text style={styles.data}>
-                          {this.state.data[this.state.data.length - 1]?.gyroscopeData.y.toFixed(2)}
+                          {this.state.data[
+                            this.state.data.length - 1
+                          ]?.gyroscopeData.y.toFixed(2)}
                         </Text>
                         <Text style={styles.data}>
-                          {this.state.data[this.state.data.length - 1]?.gyroscopeData.z.toFixed(2)}
+                          {this.state.data[
+                            this.state.data.length - 1
+                          ]?.gyroscopeData.z.toFixed(2)}
                         </Text>
                       </>
                     ) : (
-                        <FontAwesome name="ban" />
-                      )}
+                      <FontAwesome name="ban" />
+                    )}
                   </View>
                 </View>
                 <View
@@ -547,24 +530,31 @@ export default class PositionScreen extends Component<Props, States> {
                       }}
                     >
                       磁力计(x,y,z)
-                        </Text>
+                    </Text>
                   </View>
                   <View style={styles.dataContainer}>
-                    {this.state.data[this.state.data.length - 1]?.magnetometerData != null ? (
+                    {this.state.data[this.state.data.length - 1]
+                      ?.magnetometerData != null ? (
                       <>
                         <Text style={styles.data}>
-                          {this.state.data[this.state.data.length - 1]?.magnetometerData.x.toFixed(2)}
+                          {this.state.data[
+                            this.state.data.length - 1
+                          ]?.magnetometerData.x.toFixed(2)}
                         </Text>
                         <Text style={styles.data}>
-                          {this.state.data[this.state.data.length - 1]?.magnetometerData.y.toFixed(2)}
+                          {this.state.data[
+                            this.state.data.length - 1
+                          ]?.magnetometerData.y.toFixed(2)}
                         </Text>
                         <Text style={styles.data}>
-                          {this.state.data[this.state.data.length - 1]?.magnetometerData.z.toFixed(2)}
+                          {this.state.data[
+                            this.state.data.length - 1
+                          ]?.magnetometerData.z.toFixed(2)}
                         </Text>
                       </>
                     ) : (
-                        <FontAwesome name="ban" />
-                      )}
+                      <FontAwesome name="ban" />
+                    )}
                   </View>
                 </View>
                 <View
@@ -587,21 +577,38 @@ export default class PositionScreen extends Component<Props, States> {
                       }}
                     >
                       气压计
-                        </Text>
+                    </Text>
                   </View>
                   <View style={styles.dataContainer}>
-                    {this.state.data[this.state.data.length - 1]?.barometerData != null ? (
+                    {this.state.data[this.state.data.length - 1]
+                      ?.barometerData != null ? (
                       <Text style={styles.data}>
-                        {this.state.data[this.state.data.length - 1]?.barometerData.pressure.toFixed(2)}
+                        {this.state.data[
+                          this.state.data.length - 1
+                        ]?.barometerData.pressure.toFixed(2)}
                       </Text>
                     ) : (
-                        <FontAwesome name="ban" />
-                      )}
+                      <FontAwesome name="ban" />
+                    )}
                   </View>
                 </View>
                 <View style={{ marginTop: 10 }}>
                   <Text style={{ fontSize: 12 }}>卫星时间</Text>
-                  <Text style={{ fontSize: 12, borderWidth: 0.33333, marginTop: 5,lineHeight:30,textAlign:"center", backgroundColor: "#ddd", borderColor: "#aaa", height: 30, fontWeight: "700" }}>{this.state.data[this.state.data.length - 1]?.timeString}</Text>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      borderWidth: 0.33333,
+                      marginTop: 5,
+                      lineHeight: 30,
+                      textAlign: "center",
+                      backgroundColor: "#ddd",
+                      borderColor: "#aaa",
+                      height: 30,
+                      fontWeight: "700",
+                    }}
+                  >
+                    {this.state.data[this.state.data.length - 1]?.timeString}
+                  </Text>
                 </View>
                 <View style={{ flex: 1, justifyContent: "center" }}>
                   {!this.state.running ? (
@@ -613,18 +620,28 @@ export default class PositionScreen extends Component<Props, States> {
                       onPress={this.start}
                     >
                       <Entypo name="controller-play" size={34} color="green" />
+                      <Text style={{ fontSize: 8 }} numberOfLines={1}>
+                        开始按钮
+                      </Text>
                     </TouchableOpacity>
                   ) : (
-                      <TouchableOpacity
-                        style={{
-                          justifyContent: "center",
-                          alignItems: "center",
-                        }}
-                        onPress={this.stop}
-                      >
-                        <Entypo name="controller-paus" size={34} color="#d75c49" />
-                      </TouchableOpacity>
-                    )}
+                    <TouchableOpacity
+                      style={{
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                      onPress={this.stop}
+                    >
+                      <Entypo
+                        name="controller-paus"
+                        size={34}
+                        color="#d75c49"
+                      />
+                      <Text style={{ fontSize: 8 }} numberOfLines={1}>
+                        暂停按钮
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
 
@@ -636,58 +653,70 @@ export default class PositionScreen extends Component<Props, States> {
                 height={350}
                 theme={VictoryTheme.material}
                 style={{
-                  background: {}
+                  background: {},
                 }}
-                containerComponent={<VictoryZoomContainer zoomDomain={{ y: [-150, 150] }} />}
+                containerComponent={
+                  <VictoryZoomContainer zoomDomain={{ y: [-150, 150] }} />
+                }
               >
-                <VictoryLabel style={{ fill: "#aaa" }} x={130} y={20}
+                <VictoryLabel
+                  style={{ fill: "#aaa" }}
+                  x={130}
+                  y={20}
                   text="历史动态曲线(相对)"
                 />
-                <VictoryAxis crossAxis
+                <VictoryAxis
+                  crossAxis
                   theme={VictoryTheme.material}
                   offsetY={20}
                   tickValues={[1, 2, 3, 4, 5, 6, 7, 8, 9]}
-                  style={{tickLabels: {fontSize: 10, padding: 2}}}
+                  style={{ tickLabels: { fontSize: 10, padding: 2 } }}
                   standalone={false}
                 />
-                <VictoryAxis dependentAxis crossAxis
-                tickCount={20}
-                  style={{tickLabels: {fontSize: 10, padding: 2}}}
+                <VictoryAxis
+                  dependentAxis
+                  crossAxis
+                  tickCount={20}
+                  style={{ tickLabels: { fontSize: 10, padding: 2 } }}
                   standalone={false}
                 />
                 <VictoryLine
                   interpolation="natural"
                   style={{ data: { stroke: "#606266" } }}
-                  data={this.state.data.slice(-10).map(({ magnetometerData }, i) => {
-                    if (magnetometerData) {
-                      return {
-                        // x: i.toFixed(0),
-                        y: (magnetometerData.x)
+                  data={this.state.data
+                    .slice(-10)
+                    .map(({ magnetometerData }, i) => {
+                      if (magnetometerData) {
+                        return {
+                          // x: i.toFixed(0),
+                          y: magnetometerData.x,
+                        };
+                      } else {
+                        return {
+                          // x: i,
+                          y: 0,
+                        };
                       }
-                    }
-                    else {
-                      return {
-                        // x: i,
-                        y: 0
-                      }
-                    }
-                  })} y="y"
+                    })}
+                  y="y"
                 />
                 <VictoryLine
                   interpolation="natural"
                   style={{ data: { stroke: "#F56C6C" } }}
-                  data={this.state.data.slice(-10).map(({ accelerometerData }, i) => {
-                    if (accelerometerData) {
-                      return {
-                        y: accelerometerData.x * 10
+                  data={this.state.data
+                    .slice(-10)
+                    .map(({ accelerometerData }, i) => {
+                      if (accelerometerData) {
+                        return {
+                          y: accelerometerData.x * 10,
+                        };
+                      } else {
+                        return {
+                          y: 0,
+                        };
                       }
-                    }
-                    else {
-                      return {
-                        y: 0
-                      }
-                    }
-                  })} y="y"
+                    })}
+                  y="y"
                 />
                 <VictoryLine
                   interpolation="natural"
@@ -695,15 +724,15 @@ export default class PositionScreen extends Component<Props, States> {
                   data={this.state.data.slice(-10).map(({ barometerData }) => {
                     if (barometerData) {
                       return {
-                        y: barometerData.pressure / 10
-                      }
-                    }
-                    else {
+                        y: barometerData.pressure / 10,
+                      };
+                    } else {
                       return {
-                        y: 0
-                      }
+                        y: 0,
+                      };
                     }
-                  })} y="y"
+                  })}
+                  y="y"
                 />
                 <VictoryLine
                   interpolation="natural"
@@ -711,31 +740,49 @@ export default class PositionScreen extends Component<Props, States> {
                   data={this.state.data.slice(-10).map(({ gyroscopeData }) => {
                     if (gyroscopeData) {
                       return {
-                        y: (gyroscopeData.x) * 100
-                      }
-                    }
-                    else {
+                        y: gyroscopeData.x * 100,
+                      };
+                    } else {
                       return {
-                        y: 0
-                      }
+                        y: 0,
+                      };
                     }
-                  })} y="y"
+                  })}
+                  y="y"
                 />
               </VictoryChart>
             </View>
-            <View style={{ margin: 5, flex: 1,backgroundColor:'#f1f8ff' }}>
+            <View style={{ margin: 5, flex: 1, backgroundColor: "#f1f8ff" }}>
               <ScrollView>
-                <Table borderStyle={{borderWidth: 2, borderColor: '#c8e1ff'}}>
-                  <Row style={{ height: 30, backgroundColor: '#f1f8ff' }} textStyle={{textAlign: 'center',fontSize:12}} data={['时间', '坐标', '加速度', '磁力','气压']}></Row>
-                  <Rows data={this.state.data.slice(-10).map(e=>{
-                    return [
-                      e.timeString,
-                      e.location.longitude.toFixed(2)+"\n"+e?.location.latitude.toFixed(2),
-                      e.accelerometerData?.x.toFixed(2)+"\n"+e.accelerometerData?.y.toFixed(2)+"\n"+e.accelerometerData?.z.toFixed(2),
-                      e.magnetometerData?.x.toFixed(2)+"\n"+e.magnetometerData?.y.toFixed(2)+"\n"+e.magnetometerData?.z.toFixed(2),
-                      e.barometerData?.pressure.toFixed(2)
-                    ]
-                  })} textStyle={{textAlign: 'center',fontSize:8}}/>
+                <Table
+                  widthArr={[200, 100, 100, 100, 100]}
+                  borderStyle={{ borderWidth: 1, borderColor: "#c8e1ff" }}
+                >
+                  <Row
+                    style={{ height: 30, backgroundColor: "#f1f8ff" }}
+                    textStyle={{ textAlign: "center", fontSize: 12 }}
+                    data={["时间", "坐标", "加速度", "磁力", "气压"]}
+                  ></Row>
+                  <Rows
+                    data={this.state.data.slice(-10).map((e) => {
+                      return [
+                        e.timeString,
+                        e.location.longitude + "\n" + e?.location.latitude,
+                        e.accelerometerData?.x +
+                          "\n" +
+                          e.accelerometerData?.y +
+                          "\n" +
+                          e.accelerometerData?.z,
+                        e.magnetometerData?.x +
+                          "\n" +
+                          e.magnetometerData?.y +
+                          "\n" +
+                          e.magnetometerData?.z,
+                        e.barometerData?.pressure,
+                      ];
+                    })}
+                    textStyle={{ textAlign: "center", fontSize: 8 }}
+                  />
                 </Table>
               </ScrollView>
             </View>
@@ -744,13 +791,13 @@ export default class PositionScreen extends Component<Props, States> {
             style={{
               paddingHorizontal: 10,
               alignItems: "center",
-              backgroundColor:"#fff",
+              backgroundColor: "#fff",
               justifyContent: "space-around",
               flexDirection: "row",
               height: 50,
             }}
           >
-            <Text>采集间隔</Text>
+            <Text>采集时间间隔</Text>
             <Slider
               style={{ flex: 1 }}
               minimumValue={1}

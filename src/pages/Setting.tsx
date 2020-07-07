@@ -6,7 +6,7 @@ import {
   Platform,
   Text,
   Alert,
-  YellowBox
+  YellowBox,
 } from "react-native";
 import AsyncStorage from "@react-native-community/async-storage";
 import DeviceInfo from "react-native-device-info";
@@ -15,7 +15,11 @@ import Entypo from "react-native-vector-icons/Entypo";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import Loading from "../components/loading";
 import { useFocusEffect } from "@react-navigation/native";
-import { TouchableOpacity, ScrollView, Switch } from "react-native-gesture-handler";
+import {
+  TouchableOpacity,
+  ScrollView,
+  Switch,
+} from "react-native-gesture-handler";
 import RNFS, { uploadFiles } from "react-native-fs";
 import { getTimeString, pushData } from "../utils";
 import { promise } from "ping";
@@ -24,7 +28,7 @@ interface Props {
   navigation: any;
 }
 interface States {
-  realTimeUpload: boolean
+  realTimeUpload: boolean;
 }
 export class SettingScreen extends React.Component<Props, States> {
   Loading: Loading;
@@ -32,21 +36,22 @@ export class SettingScreen extends React.Component<Props, States> {
   constructor(props: Readonly<Props>) {
     super(props);
     this.state = {
-      realTimeUpload: true
+      realTimeUpload: true,
     };
-    this._unsubscribe = this.props.navigation.addListener("focus", () => {
-    
-    });
+    this._unsubscribe = this.props.navigation.addListener("focus", () => {});
     this.onRealSwitch = this.onRealSwitch.bind(this);
   }
   async onRealSwitch(value: boolean) {
     try {
-      await AsyncStorage.setItem("setting_realtime_upload", JSON.stringify({
-        realTimeUpload: value
-      }))
+      await AsyncStorage.setItem(
+        "setting_realtime_upload",
+        JSON.stringify({
+          realTimeUpload: value,
+        })
+      );
       this.setState({
-        realTimeUpload: value
-      })
+        realTimeUpload: value,
+      });
     } catch (e) {
       Alert.alert("错误", "" + e);
     }
@@ -54,18 +59,17 @@ export class SettingScreen extends React.Component<Props, States> {
   async componentDidMount() {
     try {
       let s_v1 = await AsyncStorage.getItem("setting_realtime_upload");
-      let v1 = JSON.parse(s_v1)
-      if(v1){
+      let v1 = JSON.parse(s_v1);
+      if (v1) {
         this.setState({
-         realTimeUpload:v1.realTimeUpload
-        })
-      }
-      else{
+          realTimeUpload: v1.realTimeUpload,
+        });
+      } else {
         this.setState({
-          realTimeUpload:true
-         })
+          realTimeUpload: true,
+        });
       }
-    }catch(e){
+    } catch (e) {
       console.log(e);
     }
   }
@@ -114,15 +118,20 @@ export class SettingScreen extends React.Component<Props, States> {
               }}
             >
               <View>
-                <Text style={{ fontSize: 17, color: "#000", fontWeight: "700" }}>
+                <Text
+                  style={{ fontSize: 17, color: "#000", fontWeight: "700" }}
+                >
                   实时上传
                 </Text>
                 <View style={{ marginBottom: 4 }} />
                 <Text style={{ fontSize: 12, color: "#666" }}>
                   修改此项将会清空已收集到的数据
-                  </Text>
+                </Text>
               </View>
-              <Switch onValueChange={this.onRealSwitch} value={this.state.realTimeUpload}></Switch>
+              <Switch
+                onValueChange={this.onRealSwitch}
+                value={this.state.realTimeUpload}
+              ></Switch>
             </View>
             <View style={{ marginTop: 5 }}></View>
             <LinkItem
@@ -138,13 +147,25 @@ export class SettingScreen extends React.Component<Props, States> {
             <LinkItem
               title="版本"
               description="Version 0.0.1"
-              onPress={() => { }}
+              onPress={() => {}}
             />
             <View style={{ marginTop: 5 }}></View>
             <LinkItem
               title="作者"
-              description="lovelywhite.cn"
-              onPress={() => { }}
+              description="王贵财、lovelywhite.cn"
+              onPress={() => {}}
+            />
+            <View style={{ marginTop: 5 }}></View>
+            <LinkItem
+              title="单位"
+              description="河南工业大学、中南大学"
+              onPress={() => {}}
+            />
+            <View style={{ marginTop: 5 }}></View>
+            <LinkItem
+              title="隐私"
+              description="本平台数据不涉及个人隐私监测，仅用于科学研究"
+              onPress={() => {}}
             />
           </View>
         </SafeAreaView>

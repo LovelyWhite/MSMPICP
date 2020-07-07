@@ -16,8 +16,8 @@ import Loading from "../components/loading";
 import { TouchableOpacity, ScrollView } from "react-native-gesture-handler";
 import RNFS, { uploadFiles } from "react-native-fs";
 import { getTimeString, pushData } from "../utils";
-import { promise } from "ping";
 import { getSensorInfo } from "../modules/sensor";
+import { Parser } from "json2csv";
 interface Props {
   navigation: any;
 }
@@ -32,8 +32,7 @@ export class HistoryScreen extends React.Component<Props, States> {
     this.state = {
       files: [],
     };
-    this._unsubscribe = this.props.navigation.addListener("focus", () => {
-    });
+    this._unsubscribe = this.props.navigation.addListener("focus", () => {});
     this.readFiles = this.readFiles.bind(this);
   }
   readFiles() {
@@ -63,7 +62,7 @@ export class HistoryScreen extends React.Component<Props, States> {
               sensorInfo,
               data: JSON.parse(res),
             };
-            let result = await pushData("/upload", uploadData,0, (pe) => {
+            let result = await pushData("/upload", uploadData, 0, (pe) => {
               this.Loading.setText(
                 "正在上传 " + (((pe.loaded / pe.total) * 100) | 0) + "%"
               );
@@ -98,33 +97,35 @@ export class HistoryScreen extends React.Component<Props, States> {
 
     if (rs === "granted") {
       this.Loading.startLoading("正在导出数据");
-      //创建文件夹
-      RNFS.mkdir(RNFS.DownloadDirectoryPath + "/storedata")
-        .then(() => {
-          //写文件
-          RNFS.copyFile(
-            file.path,
-            RNFS.DownloadDirectoryPath + "/storedata/" + file.name
-          )
-            .then(() => {
-              Alert.alert(
-                "提示",
-                "数据已成功导入至存储\nDownload/storedata文件夹"
-              );
-            })
-            .catch((e) => {
-              Alert.alert("错误", "" + e);
-            })
-            .finally(() => {
-              this.Loading.stopLoading();
-            });
-        })
-        .catch((e) => {
-          Alert.alert("错误", "" + e);
-        })
-        .finally(() => {
-          this.Loading.stopLoading();
-        });
+      try {
+        //创建文件夹
+        await RNFS.mkdir(RNFS.DownloadDirectoryPath + "/storedata");
+        let r = await RNFS.readFile(file.path);
+        const json2csvParser = new Parser();
+        const csv = json2csvParser.parse(JSON.parse(r));
+        console.log(csv);
+        RNFS.writeFile(
+          RNFS.DownloadDirectoryPath +
+            "/storedata/" +
+            file.name.replace(".txt", ".csv"),
+          csv
+        );
+        await RNFS.copyFile(
+          file.path,
+          RNFS.DownloadDirectoryPath +
+            "/storedata/" +
+            file.name.replace(".txt", ".json")
+        );
+        Alert.alert(
+          "提示",
+          "数据已成功导入至存储\nDownload/storedata/" +
+            file.name.replace(".txt", "")
+        );
+      } catch (e) {
+        Alert.alert("错误", e + "");
+      } finally {
+        this.Loading.stopLoading();
+      }
     } else {
       Alert.alert("提示", "请允许存储权限");
     }
