@@ -54,7 +54,7 @@ export function getTimeString(timestamp: number): string {
   }
 }
 
-export const URL = "https://suxitech.work";
+export const URL = "https://suxitech.work/server";
 export function pushData(
   url: string,
   values: any,

@@ -38,6 +38,7 @@ export class HistoryScreen extends React.Component<Props, States> {
   readFiles() {
     RNFS.readDir(RNFS.DocumentDirectoryPath + "/storedata")
       .then((files) => {
+        console.log(files)
         this.setState({
           files,
         });
@@ -54,19 +55,22 @@ export class HistoryScreen extends React.Component<Props, States> {
           try {
             this.Loading.startLoading("正在上传 0%");
             let res = await RNFS.readFile(file.path, "utf8");
+            console.log(JSON.parse(res));
+            
             let sensorInfo = await getSensorInfo();
             let uploadData = {
               uniqueId,
               model,
               brand,
               sensorInfo,
-              data: JSON.parse(res),
+              data:[],
             };
             let result = await pushData("/upload", uploadData, 0, (pe) => {
               this.Loading.setText(
                 "正在上传 " + (((pe.loaded / pe.total) * 100) | 0) + "%"
               );
             });
+            console.log(result);
             let msg = result.data;
             if (msg === "上传成功") {
               await this.deleteData(file.path);
@@ -75,7 +79,7 @@ export class HistoryScreen extends React.Component<Props, States> {
             Alert.alert("提示", result.data);
           } catch (e) {
             console.log(e);
-            Alert.alert("错误", "" + e);
+            Alert.alert("错误", "");
           } finally {
             this.Loading.stopLoading();
           }
@@ -98,13 +102,29 @@ export class HistoryScreen extends React.Component<Props, States> {
     if (rs === "granted") {
       this.Loading.startLoading("正在导出数据");
       try {
+        String.prototype.replaceAll = function(s1, s2) {
+          return this.replace(new RegExp(s1, "gm"), s2);
+      }
         //创建文件夹
         await RNFS.mkdir(RNFS.DownloadDirectoryPath + "/storedata");
-        let r = await RNFS.readFile(file.path);
+        let r:string = await RNFS.readFile(file.path);
+        r = r.replaceAll("magnetometerData", "磁力计");
+        r = r.replaceAll("gyroscopeData", "陀螺仪");
+        r = r.replaceAll("barometerData", "气压计");
+        r = r.replaceAll("accelerometerData", "加速度计");
+        r = r.replaceAll("relativeAltitude", "相对海拔");
+        r = r.replaceAll("location", "位置");
+        r = r.replaceAll("pressure", "气压");
+        r = r.replaceAll("altitude", "海拔");
+        r = r.replaceAll("accuracy", "精确度");
+        r = r.replaceAll("longitude", "经度");
+        r = r.replaceAll("latitude", "纬度");
+        r = r.replaceAll("provider", "位置提供");
         const json2csvParser = new Parser();
         const csv = json2csvParser.parse(JSON.parse(r));
         console.log(csv);
-        RNFS.writeFile(
+
+        await RNFS.writeFile(
           RNFS.DownloadDirectoryPath +
             "/storedata/" +
             file.name.replace(".txt", ".csv"),

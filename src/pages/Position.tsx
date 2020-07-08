@@ -320,7 +320,10 @@ export default class PositionScreen extends Component<Props, States> {
               elevation: 1,
             }}
           >
-            <Text style={{ fontSize: 15, color: "#000", marginLeft: 10 }} numberOfLines={1}>
+            <Text
+              style={{ fontSize: 15, color: "#000", marginLeft: 10 }}
+              numberOfLines={1}
+            >
               多源传感器智能终端信息平台
             </Text>
             {this.state.data.length > 0 && (
@@ -761,13 +764,19 @@ export default class PositionScreen extends Component<Props, States> {
                   <Row
                     style={{ height: 30, backgroundColor: "#f1f8ff" }}
                     textStyle={{ textAlign: "center", fontSize: 12 }}
-                    data={["时间", "坐标", "加速度", "磁力", "气压"]}
+                    data={["时间", "坐标", "陀螺仪", "加速度", "磁力", "气压"]}
                   ></Row>
                   <Rows
                     data={this.state.data.slice(-10).map((e) => {
                       return [
                         e.timeString,
                         e.location.longitude + "\n" + e?.location.latitude,
+                        e.gyroscopeData?.x +
+                          "\n" +
+                          e.gyroscopeData?.y +
+                          "\n" +
+                          e.gyroscopeData?.z +
+                          "\n",
                         e.accelerometerData?.x +
                           "\n" +
                           e.accelerometerData?.y +
