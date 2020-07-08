@@ -321,8 +321,8 @@ export default class PositionScreen extends Component<Props, States> {
             }}
           >
             <Text
-              style={{ fontSize: 15, color: "#000", marginLeft: 10 }}
-              numberOfLines={1}
+              style={{ fontSize: 15, color: "#000", marginLeft: 10,maxWidth:120 }}
+              numberOfLines={2}
             >
               多源传感器智能终端信息平台
             </Text>
@@ -384,10 +384,11 @@ export default class PositionScreen extends Component<Props, States> {
           </View>
           <View style={{ flex: 1, paddingTop: 10 }}>
             <View style={{ flexDirection: "row", marginHorizontal: 10 }}>
-              <View
+              <ScrollView
                 style={{
-                  flex: 1,
-                  paddingHorizontal: 2,
+                  width:90,
+                  height:Dimensions.get("window").height/2,
+                  paddingRight:10,
                 }}
               >
                 <View
@@ -613,7 +614,7 @@ export default class PositionScreen extends Component<Props, States> {
                     {this.state.data[this.state.data.length - 1]?.timeString}
                   </Text>
                 </View>
-                <View style={{ flex: 1, justifyContent: "center" }}>
+                <View style={{ marginTop:10, justifyContent: "center" }}>
                   {!this.state.running ? (
                     <TouchableOpacity
                       style={{
@@ -646,14 +647,14 @@ export default class PositionScreen extends Component<Props, States> {
                     </TouchableOpacity>
                   )}
                 </View>
-              </View>
+              </ScrollView>
 
               <VictoryChart
                 maxDomain={{ y: 150 }}
                 minDomain={{ y: -150 }}
-                padding={{ right: 10, left: 40, top: 6, bottom: 20 }}
-                width={260}
-                height={350}
+                padding={{ right: 10, left: 30, top: 6, bottom: 20 }}
+                width={Dimensions.get("window").width-110}
+                height={Dimensions.get("window").height/2}
                 theme={VictoryTheme.material}
                 style={{
                   background: {},
@@ -664,7 +665,7 @@ export default class PositionScreen extends Component<Props, States> {
               >
                 <VictoryLabel
                   style={{ fill: "#aaa" }}
-                  x={130}
+                  x={50}
                   y={20}
                   text="历史动态曲线(相对)"
                 />
@@ -755,10 +756,10 @@ export default class PositionScreen extends Component<Props, States> {
                 />
               </VictoryChart>
             </View>
-            <View style={{ margin: 5, flex: 1, backgroundColor: "#f1f8ff" }}>
+            <View style={{ margin: 5,flex:1, backgroundColor: "#f1f8ff" }}>
               <ScrollView>
                 <Table
-                  widthArr={[200, 100, 100, 100, 100]}
+                  widthArr={[100, 100, 100, 100, 100]}
                   borderStyle={{ borderWidth: 1, borderColor: "#c8e1ff" }}
                 >
                   <Row

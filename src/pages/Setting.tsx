@@ -152,7 +152,7 @@ export class SettingScreen extends React.Component<Props, States> {
             <View style={{ marginTop: 5 }}></View>
             <LinkItem
               title="作者"
-              description="王贵财、lovelywhite.cn"
+              description="王贵财、刘春明、lovelywhite.cn"
               onPress={() => {}}
             />
             <View style={{ marginTop: 5 }}></View>
@@ -164,7 +164,7 @@ export class SettingScreen extends React.Component<Props, States> {
             <View style={{ marginTop: 5 }}></View>
             <LinkItem
               title="隐私"
-              description="本平台数据不涉及个人隐私监测，仅用于科学研究"
+              description="本平台数据不涉及个人隐私监测，仅用于科学研究。如果不同意，请关闭实时上传或者卸载本软件！"
               onPress={() => {}}
             />
           </View>
