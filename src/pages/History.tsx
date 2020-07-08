@@ -55,15 +55,14 @@ export class HistoryScreen extends React.Component<Props, States> {
           try {
             this.Loading.startLoading("正在上传 0%");
             let res = await RNFS.readFile(file.path, "utf8");
-            console.log(JSON.parse(res));
-            
+
             let sensorInfo = await getSensorInfo();
             let uploadData = {
               uniqueId,
               model,
               brand,
               sensorInfo,
-              data:[],
+              data:JSON.parse(res),
             };
             let result = await pushData("/upload", uploadData, 0, (pe) => {
               this.Loading.setText(
