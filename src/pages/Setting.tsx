@@ -3,26 +3,18 @@ import {
   View,
   SafeAreaView,
   StatusBar,
-  Platform,
   Text,
   Alert,
-  YellowBox,
 } from "react-native";
 import AsyncStorage from "@react-native-community/async-storage";
 import DeviceInfo from "react-native-device-info";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
-import Entypo from "react-native-vector-icons/Entypo";
-import AntDesign from "react-native-vector-icons/AntDesign";
 import Loading from "../components/loading";
-import { useFocusEffect } from "@react-navigation/native";
 import {
   TouchableOpacity,
   ScrollView,
   Switch,
 } from "react-native-gesture-handler";
-import RNFS, { uploadFiles } from "react-native-fs";
-import { getTimeString, pushData } from "../utils";
-import { promise } from "ping";
 import LinkItem from "../components/linkitem";
 interface Props {
   navigation: any;
@@ -107,7 +99,8 @@ export class SettingScreen extends React.Component<Props, States> {
             </Text>
             <View style={{ flex: 1 }}></View>
           </View>
-          <View style={{ paddingTop: 10 }}>
+          <ScrollView showsVerticalScrollIndicator={false}>
+          <View style={{ paddingTop: 10,paddingBottom:10}}>
             <View
               style={{
                 minHeight: 60,
@@ -168,7 +161,9 @@ export class SettingScreen extends React.Component<Props, States> {
               onPress={() => {}}
             />
           </View>
-        </SafeAreaView>
+       
+          </ScrollView>
+          </SafeAreaView>
       </View>
     );
   }

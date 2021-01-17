@@ -34,7 +34,6 @@ import {
 } from "expo-sensors";
 import { Badge } from "react-native-elements";
 import Feather from "react-native-vector-icons/Feather";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import AntDesign from "react-native-vector-icons/AntDesign";
@@ -321,7 +320,12 @@ export default class PositionScreen extends Component<Props, States> {
             }}
           >
             <Text
-              style={{ fontSize: 15, color: "#000", marginLeft: 10,maxWidth:120 }}
+              style={{
+                fontSize: 15,
+                color: "#000",
+                marginLeft: 10,
+                maxWidth: 120,
+              }}
               numberOfLines={2}
             >
               多源传感器智能终端信息平台
@@ -386,9 +390,9 @@ export default class PositionScreen extends Component<Props, States> {
             <View style={{ flexDirection: "row", marginHorizontal: 10 }}>
               <ScrollView
                 style={{
-                  width:90,
-                  height:Dimensions.get("window").height/2,
-                  paddingRight:10,
+                  width: 90,
+                  height: Dimensions.get("window").height / 2,
+                  paddingRight: 10,
                 }}
               >
                 <View
@@ -614,7 +618,7 @@ export default class PositionScreen extends Component<Props, States> {
                     {this.state.data[this.state.data.length - 1]?.timeString}
                   </Text>
                 </View>
-                <View style={{ marginTop:10, justifyContent: "center" }}>
+                <View style={{ marginTop: 10, justifyContent: "center" }}>
                   {!this.state.running ? (
                     <TouchableOpacity
                       style={{
@@ -653,21 +657,30 @@ export default class PositionScreen extends Component<Props, States> {
                 maxDomain={{ y: 150 }}
                 minDomain={{ y: -150 }}
                 padding={{ right: 10, left: 30, top: 6, bottom: 20 }}
-                width={Dimensions.get("window").width-110}
-                height={Dimensions.get("window").height/2}
+                width={Dimensions.get("window").width - 110}
+                height={Dimensions.get("window").height / 2}
                 theme={VictoryTheme.material}
                 style={{
                   background: {},
                 }}
-                containerComponent={
-                  <VictoryZoomContainer zoomDomain={{ y: [-150, 150] }} />
-                }
               >
                 <VictoryLabel
                   style={{ fill: "#aaa" }}
                   x={50}
                   y={20}
                   text="历史动态曲线(相对)"
+                />
+                <VictoryLabel
+                  style={{ fill: "#aaa", fontSize: 10 }}
+                  x={10}
+                  y={15}
+                  text="高"
+                />
+                <VictoryLabel
+                  style={{ fill: "#aaa", fontSize: 10 }}
+                  x={10}
+                  y={Dimensions.get("window").height / 2 - 20}
+                  text="低"
                 />
                 <VictoryAxis
                   crossAxis
@@ -681,7 +694,9 @@ export default class PositionScreen extends Component<Props, States> {
                   dependentAxis
                   crossAxis
                   tickCount={20}
-                  style={{ tickLabels: { fontSize: 10, padding: 2 } }}
+                  style={{
+                    tickLabels: { fontSize: 10, padding: 2, display: "none" },
+                  }}
                   standalone={false}
                 />
                 <VictoryLine
@@ -756,7 +771,7 @@ export default class PositionScreen extends Component<Props, States> {
                 />
               </VictoryChart>
             </View>
-            <View style={{ margin: 5,flex:1, backgroundColor: "#f1f8ff" }}>
+            <View style={{ margin: 5, flex: 1, backgroundColor: "#f1f8ff" }}>
               <ScrollView>
                 <Table
                   widthArr={[100, 100, 100, 100, 100]}
@@ -768,29 +783,32 @@ export default class PositionScreen extends Component<Props, States> {
                     data={["时间", "坐标", "陀螺仪", "加速度", "磁力", "气压"]}
                   ></Row>
                   <Rows
-                    data={this.state.data.slice(-10).map((e) => {
-                      return [
-                        e.timeString,
-                        e.location.longitude + "\n" + e?.location.latitude,
-                        e.gyroscopeData?.x +
-                          "\n" +
-                          e.gyroscopeData?.y +
-                          "\n" +
-                          e.gyroscopeData?.z +
-                          "\n",
-                        e.accelerometerData?.x +
-                          "\n" +
-                          e.accelerometerData?.y +
-                          "\n" +
-                          e.accelerometerData?.z,
-                        e.magnetometerData?.x +
-                          "\n" +
-                          e.magnetometerData?.y +
-                          "\n" +
-                          e.magnetometerData?.z,
-                        e.barometerData?.pressure,
-                      ];
-                    })}
+                    data={this.state.data
+                      .slice(-10)
+                      .reverse()
+                      .map((e) => {
+                        return [
+                          e.timeString,
+                          e.location.longitude + "\n" + e?.location.latitude,
+                          e.gyroscopeData?.x +
+                            "\n" +
+                            e.gyroscopeData?.y +
+                            "\n" +
+                            e.gyroscopeData?.z +
+                            "\n",
+                          e.accelerometerData?.x +
+                            "\n" +
+                            e.accelerometerData?.y +
+                            "\n" +
+                            e.accelerometerData?.z,
+                          e.magnetometerData?.x +
+                            "\n" +
+                            e.magnetometerData?.y +
+                            "\n" +
+                            e.magnetometerData?.z,
+                          e.barometerData?.pressure,
+                        ];
+                      })}
                     textStyle={{ textAlign: "center", fontSize: 8 }}
                   />
                 </Table>
